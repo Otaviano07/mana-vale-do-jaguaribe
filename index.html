@@ -94,10 +94,6 @@
                             <label class="form-label">CPF</label>
                             <input type="number" class="form-input" id="cpf" v-model="formData.cpf" placeholder="000.000.000-00">
                         </div>
-                        <div class="form-group cep-width">
-                            <label class="form-label">CEP</label>
-                            <input type="number" class="form-input" id="cep" v-model="formData.cep" @blur="fetchAddressFromCEP" placeholder="00000-000">
-                        </div>
                         <div class="form-group igreja-width">
                             <label class="form-label">Igreja</label>
                             <select class="form-input" v-model="formData.igreja">
@@ -109,6 +105,14 @@
                             <label class="form-label">Distr. Pastoral</label>
                             <input type="text" class="form-input" id="distrito" v-model="formData.distrito" placeholder="Distrito" disabled>
                         </div>
+                        <div class="form-group cep-width">
+                            <label class="form-label">CEP</label>
+                            <input type="number" class="form-input" id="cep" v-model="formData.cep" @blur="fetchAddressFromCEP" placeholder="00000-000">
+                        </div>
+                        <div class="form-group cp-width">
+                            <label class="form-label">Código Postal</label>
+                            <input type="number" class="form-input" id="cp" v-model="formData.cp" placeholder="Código Postal">
+                        </div>
                         <div class="form-group endereco-width">
                             <label class="form-label">Endereço</label>
                             <input type="text" class="form-input" id="endereco" v-model="formData.endereco" placeholder="Rua, Avenida...">
@@ -116,10 +120,6 @@
                         <div class="form-group numero-width">
                             <label class="form-label">Nº</label>
                             <input type="number" class="form-input" id="numero" v-model="formData.numero" placeholder="Número">
-                        </div>
-                        <div class="form-group cp-width">
-                            <label class="form-label">C.P.</label>
-                            <input type="number" class="form-input" id="cp" v-model="formData.cp" placeholder="Código Postal">
                         </div>
                         <div class="form-group complemento-width">
                             <label class="form-label">Complemento</label>
