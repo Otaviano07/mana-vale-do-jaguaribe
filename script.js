@@ -502,7 +502,7 @@ Vue.createApp({
             return new Promise(resolve => {
                 const img = new Image();
                 img.crossOrigin = "anonymous";
-                img.src = "img/folder.jpg";
+                img.src = "img/folder_sem.jpg";
 
                 img.onload = () => {
                     const { jsPDF } = window.jspdf;
@@ -523,37 +523,91 @@ Vue.createApp({
                     // NOME
                     let nome = this.formData.nome.toUpperCase();
                     for (let i = 0; i < nome.length; i++) {
-                        doc.text(nome[i], 33 + i * 5.1, 31.5);
+                        doc.text(nome[i], 33 + i * 3, 31.5);
                     }
 
                     // CPF
                     let cpf = this.formData.cpf.replace(/\D/g, '');
                     for (let i = 0; i < cpf.length; i++) {
-                        doc.text(cpf[i], 28 + i * 5.1, 37.5);
+                        doc.text(cpf[i], 28 + i * 3, 37);
                     }
 
                     // IGREJA
                     let igreja = this.formData.igreja.toUpperCase();
                     for (let i = 0; i < igreja.length; i++) {
-                        doc.text(igreja[i], 99 + i * 5.1, 37.5);
+                        doc.text(igreja[i], 99 + i * 3, 37);
                     }
 
                     // DISTRITO
                     let distrito = this.formData.distrito.toUpperCase();
                     for (let i = 0; i < distrito.length; i++) {
-                        doc.text(distrito[i], 53.5 + i * 5.1, 43.5);
+                        doc.text(distrito[i], 53.5 + i * 3, 43.5);
                     }
 
                     // ENDERECO
                     let endereco = this.formData.endereco.toUpperCase();
                     for (let i = 0; i < endereco.length; i++) {
-                        doc.text(endereco[i], 43.5 + i * 5.1, 49.5);
+                        doc.text(endereco[i], 43.5 + i * 3, 48.5);
                     }
 
                     // NUMERO
                     let numero = String(this.formData.numero).replace(/\D/g, '');
                     for (let i = 0; i < numero.length; i++) {
-                        doc.text(numero[i], 160 + i * 5.1, 49.5);
+                        doc.text(numero[i], 170 + i * 3, 48.5);
+                    }
+
+                    // COMLEMENTO
+                    let complemento = this.formData.complemento.toUpperCase();
+                    for (let i = 0; i < complemento.length; i++) {
+                        doc.text(complemento[i], 48.5 + i * 3, 54.5);
+                    }
+
+                    // BAIRRO
+                    let bairro = this.formData.bairro.toUpperCase();
+                    for (let i = 0; i < bairro.length; i++) {
+                        doc.text(bairro[i], 38.5 + i * 3, 60);
+                    }
+
+                    // CEP
+                    let cep = this.formData.cep.toUpperCase();
+                    for (let i = 0; i < cep.length; i++) {
+                        doc.text(cep[i], 150 + i * 3, 60);
+                    }
+
+                    // CIDADE
+                    let cidade = this.formData.cidade.toUpperCase();
+                    for (let i = 0; i < cidade.length; i++) {
+                        doc.text(cidade[i], 38.5 + i * 3, 66);
+                    }
+
+                    // CP
+                    let cp = String(this.formData.cp).replace(/\D/g, '');
+                    for (let i = 0; i < cp.length; i++) {
+                        doc.text(cp[i], 150 + i * 3, 66);
+                    }
+
+                    // UF
+                    let uf = this.formData.uf.toUpperCase();
+                    for (let i = 0; i < uf.length; i++) {
+                        doc.text(uf[i], 180 + i * 3, 66);
+                    }
+
+                    // FONE 1
+                    let fone1 = this.formData.fone1.toUpperCase();
+                    for (let i = 0; i < fone1.length; i++) {
+                        doc.text(fone1[i], 38.5 + i * 3, 71);
+                    }
+
+                    // FONE 2
+                    let fone2 = this.formData.fone2.toUpperCase();
+                    for (let i = 0; i < fone2.length; i++) {
+                        doc.text(fone2[i], 130 + i * 3, 71);
+                    }
+
+                    // EMAIL
+                    let email = this.formData.email.toUpperCase();
+                    for (let i = 0; i < email.length; i++) {
+                        doc.text(email[i], 33 + i * 3, 77);
                     }
 
                     // Após preencher tudo:
