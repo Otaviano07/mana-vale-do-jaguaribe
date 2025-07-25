@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Porção do Maná para 2025</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-masker/1.2.0/vanilla-masker.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <div class="header">
+                <h1>DISTRITO VALE DO JAGUARIBE</h1>
+                <h2>MANÁ 2025</h2>
+                <div class="assinometro">
+                    <h3>ASSINÔMETRO</h3>
+                    <div class="meta-info">
+                        <span>Meta do Distrito: <strong>526</strong></span>
+                    </div>
+                    <div class="counter-display">
+                        <div class="counter-number">{{ totalSignatures.toString().padStart(4, '0') }}</div>
+                        <div class="counter-label">ASSINATURAS</div>
+                    </div>
+                    <div class="motivational-text">
+                        <em>Cada assinatura é uma alma alcançada com a Palavra!</em>
+                    </div>
+                </div>
+                <h3>MINHA PORÇÃO DO MANÁ PARA 2026</h3>
+                <p>Faça sua escolha</p>
+            </div>
+
+            <div class="form-container">
+                <div class="products-section">
+                    <h2 class="section-title">Selecione suas Lições</h2>
+                    <div class="products-grid">
+                        <div v-for="product in products" :key="product.code" class="product-card" :class="{ selected: product.quantity > 0 }">
+                            <div class="product-header">
+                                <div class="product-name">{{ product.name }}</div>
+                                <div class="product-code">(Cód. {{ product.code }})</div>
+                            </div>
+                            <img :src="product.image" :alt="product.name" class="product-image">
+                            <div class="product-details">
+                                <div class="product-age">{{ product.age }}</div>
+                                <div class="product-price">R$ {{ product.price.toFixed(2).replace('.', ',') }}</div>
+                            </div>
+                            <div class="quantity-control">
+                                <button class="quantity-btn" @click="decreaseQuantity(product.code)" :disabled="product.quantity <= 0">-</button>
+                                <input type="number" class="quantity-input" v-model.number="product.quantity" min="0" @input="updateQuantity(product.code, $event)">
+                                <button class="quantity-btn" @click="increaseQuantity(product.code)">+</button>
+                            </div>
+                            <div class="product-subtotal" v-if="product.quantity > 0">
+                                Subtotal: <strong>R$ {{(product.price * product.quantity).toFixed(2).replace('.', ',')}}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="total-section">
+                    <div class="total-row">
+                        <span>Total:</span>
+                        <span class="total-amount">R$ {{ calculateTotal().toFixed(2).replace('.', ',') }}</span>
+                    </div>
+                </div>
+
+                <div class="payment-section">
+                    <h2 class="section-title">Formas de Pagamento</h2>
+                    <div class="payment-methods">
+                        <label class="payment-option" :class="{ active: paymentMethod === 'cartao' }">
+                            <input type="radio" v-model="paymentMethod" value="cartao">
+                            <span>💳 Cartão de Crédito</span>
+                        </label>
+                        <label class="payment-option" :class="{ active: paymentMethod === 'boleto' }">
+                            <input type="radio" v-model="paymentMethod" value="boleto">
+                            <span>📄 Boleto</span>
+                        </label>
+                        <label class="payment-option" :class="{ active: paymentMethod === 'pix' }">
+                            <input type="radio" v-model="paymentMethod" value="pix">
+                            <span>💰 Dinheiro ou Pix</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2 class="section-title">Dados Pessoais</h2>
+                    <div class="form-grid">
+                        <div class="form-group nome-width">
+                            <label class="form-label">Nome</label>
+                            <input type="text" class="form-input" id="nome" v-model="formData.nome" placeholder="Nome completo">
+                        </div>
+                        <div class="form-group cpf-width">
+                            <label class="form-label">CPF</label>
+                            <input type="text" class="form-input" id="cpf" v-model="formData.cpf" placeholder="000.000.000-00">
+                        </div>
+                        <div class="form-group cep-width">
+                            <label class="form-label">CEP</label>
+                            <input type="text" class="form-input" id="cep" v-model="formData.cep" @blur="fetchAddressFromCEP" placeholder="00000-000">
+                        </div>
+                        <div class="form-group igreja-width">
+                            <label class="form-label">Igreja</label>
+                            <select class="form-input" v-model="formData.igreja">
+                                <option value="">Selecione a Igreja</option>
+                                <option v-for="church in churches" :key="church" :value="church">{{ church }}</option>
+                            </select>
+                        </div>
+                        <div class="form-group distrito-width">
+                            <label class="form-label">Distr. Pastoral</label>
+                            <input type="text" class="form-input" id="distrito" v-model="formData.distrito" placeholder="Distrito" disabled>
+                        </div>
+                        <div class="form-group endereco-width">
+                            <label class="form-label">Endereço</label>
+                            <input type="text" class="form-input" id="endereco" v-model="formData.endereco" placeholder="Rua, Avenida...">
+                        </div>
+                        <div class="form-group numero-width">
+                            <label class="form-label">Nº</label>
+                            <input type="text" class="form-input" id="numero" v-model="formData.numero" placeholder="Número">
+                        </div>
+                        <div class="form-group cp-width">
+                            <label class="form-label">C.P.</label>
+                            <input type="text" class="form-input" id="cp" v-model="formData.cp" placeholder="Código Postal">
+                        </div>
+                        <div class="form-group complemento-width">
+                            <label class="form-label">Complemento</label>
+                            <input type="text" class="form-input" id="complemento" v-model="formData.complemento" placeholder="Apt, Casa...">
+                        </div>
+                        <div class="form-group bairro-width">
+                            <label class="form-label">Bairro</label>
+                            <input type="text" class="form-input" id="bairro" v-model="formData.bairro" placeholder="Bairro">
+                        </div>
+                        <div class="form-group cidade-width">
+                            <label class="form-label">Cidade</label>
+                            <input type="text" class="form-input" id="cidade" v-model="formData.cidade" placeholder="Cidade">
+                        </div>
+                        <div class="form-group uf-width">
+                            <label class="form-label">UF</label>
+                            <input type="text" class="form-input" id="uf" v-model="formData.uf" placeholder="UF" maxlength="2">
+                        </div>
+                        <div class="form-group fone1-width">
+                            <label class="form-label">Fone 1</label>
+                            <input type="tel" class="form-input" id="fone1" v-model="formData.fone1" placeholder="(00) 00000-0000">
+                        </div>
+                        <div class="form-group fone2-width">
+                            <label class="form-label">Fone 2</label>
+                            <input type="tel" class="form-input" id="fone2" v-model="formData.fone2" placeholder="(00) 00000-0000">
+                        </div>
+                        <div class="form-group email-width">
+                            <label class="form-label">E-mail</label>
+                            <input type="email" class="form-input" id="email" v-model="formData.email" placeholder="seuemail@exemplo.com">
+                        </div>
+                    </div>
+                </div>
+
+                <button class="submit-btn" @click="submitForm">Finalizar Assinatura</button>
+
+                <div class="note">
+                    <strong>Nota:</strong> Este fôlder não é válido como nota de garantia.<br>
+                    Preços válidos até 26/10/2025
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
