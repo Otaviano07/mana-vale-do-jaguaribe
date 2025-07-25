@@ -43,14 +43,14 @@ Vue.createApp({
             },
             deep: true
         },
-        
+
         'formData.nome'(newValue) { this.formData.nome = newValue.toUpperCase(); },
         'formData.igreja'(newValue) { this.formData.igreja = newValue.toUpperCase(); },
         'formData.distrito'(newValue) { this.formData.distrito = newValue.toUpperCase(); },
         'formData.endereco'(newValue) { this.formData.endereco = newValue.toUpperCase(); },
         'formData.complemento'(newValue) { this.formData.complemento = newValue.toUpperCase(); },
         'formData.bairro'(newValue) { this.formData.bairro = newValue.toUpperCase(); },
-        'formData.cidade': function(newValue, oldValue) {
+        'formData.cidade': function (newValue, oldValue) {
             this.formData.cidade = newValue.toUpperCase();
             if (newValue !== oldValue) {
                 this.formData.cep = '';
@@ -61,7 +61,7 @@ Vue.createApp({
                 this.formData.bairro = '';
             }
         },
-        'formData.uf': function(newValue, oldValue) {
+        'formData.uf': function (newValue, oldValue) {
             this.formData.uf = newValue.toUpperCase();
             if (newValue !== oldValue) {
                 this.formData.cidade = '';
@@ -80,16 +80,40 @@ Vue.createApp({
                 }
             }
         },
-        'formData.email'(newValue) { this.formData.email = newValue.toLowerCase(); }
+        'formData.email'(newValue) { this.formData.email = newValue.toLowerCase(); },
+        'formData.cpf'(newValue) {
+            let value = String(newValue || '').replace(/\D/g, ''); // Garante que é string e remove não-dígitos
+            if (value.length > 11) {
+                value = value.substring(0, 11);
+            }
+            if (value.length > 9) {
+                value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+            } else if (value.length > 6) {
+                value = value.replace(/^(\d{3})(\d{3})(\d{3})$/, '$1.$2.$3');
+            } else if (value.length > 3) {
+                value = value.replace(/^(\d{3})(\d{3})$/, '$1.$2');
+            }
+            this.formData.cpf = value;
+        },
+        'formData.cep'(newValue) {
+            let value = String(newValue || '').replace(/\D/g, ''); // Garante que é string e remove não-dígitos
+            if (value.length > 8) {
+                value = value.substring(0, 8);
+            }
+            if (value.length > 5) {
+                value = value.replace(/^(\d{5})(\d{3})$/, '$1-$2');
+            }
+            this.formData.cep = value;
+        }
     },
     async mounted() {
         this.showImageModal = false; // Ensure modal is hidden on mount
-        
+
         const savedFormData = localStorage.getItem('formData');
         if (savedFormData) {
             this.formData = JSON.parse(savedFormData);
         }
-        
+
         this.formData.distrito = 'VALE DO JAGUARIBE';
         await this.fetchData();
         this.fetchChurchData();
@@ -153,15 +177,37 @@ Vue.createApp({
                 return;
             }
 
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.width = 1080;
+            canvas.height = 1920;
+
+            // Calcular as proporções para o comportamento 'cover'
+            const videoRatio = video.videoWidth / video.videoHeight;
+            const canvasRatio = canvas.width / canvas.height;
+
+            let sx, sy, sWidth, sHeight; // Source (video)
+
+            if (videoRatio > canvasRatio) {
+                // O vídeo é mais largo que o canvas, cortar as laterais do vídeo
+                sHeight = video.videoHeight;
+                sWidth = sHeight * canvasRatio;
+                sx = (video.videoWidth - sWidth) / 2;
+                sy = 0;
+            } else {
+                // O vídeo é mais alto que o canvas, cortar a parte superior/inferior do vídeo
+                sWidth = video.videoWidth;
+                sHeight = sWidth / canvasRatio;
+                sx = 0;
+                sy = (video.videoHeight - sHeight) / 2;
+            }
+
+            // Desenhar a parte calculada do vídeo para preencher o canvas
+            context.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, canvas.width, canvas.height);
 
             this.capturedImage = canvas.toDataURL('image/png');
             this.drawAssinometroOnImage(); // atualiza finalShareImage
             this.stopCamera(); // desliga a câmera
         },
-        async drawAssinometroOnImage() {
+        async drawAssinometroOnImagem() {
             const canvas = this.$refs.canvas;
             const context = canvas.getContext('2d');
             const img = new Image();
@@ -199,6 +245,50 @@ Vue.createApp({
 
                 this.finalShareImage = canvas.toDataURL('image/png');
             };
+        },
+        async drawAssinometroOnImage() {
+            const canvas = this.$refs.canvas;
+            const context = canvas.getContext('2d');
+
+            // 1. Cria objetos de imagem para a foto capturada e para o template.
+            const capturedPhoto = new Image();
+            const templateImage = new Image();
+
+            // Lidar com o carregamento das duas imagens de forma assíncrona.
+            const loadImages = Promise.all([
+                new Promise(resolve => {
+                    capturedPhoto.onload = resolve;
+                    capturedPhoto.src = this.capturedImage; // Fonte da imagem capturada
+                }),
+                new Promise(resolve => {
+                    templateImage.onload = resolve;
+                    templateImage.src = 'fundo.png'; // Caminho para o seu template
+                })
+            ]);
+
+            // 2. Após ambas as imagens carregarem, desenha no canvas.
+            loadImages.then(() => {
+                // Garante que o canvas está limpo.
+                context.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Passo A: Desenha a foto capturada para preencher todo o canvas.
+                // A função capturePhoto() já garante que a foto cubra 1080x1920.
+                context.drawImage(capturedPhoto, 0, 0, canvas.width, canvas.height);
+
+                // Passo B: Desenha a imagem do template por cima da foto.
+                // A área preta (se for transparente no seu PNG) revelará a foto abaixo.
+                context.drawImage(templateImage, 0, 0, canvas.width, canvas.height);
+
+                // O texto já está no seu template, então não precisamos mais desenhá-lo aqui.
+                // Se você precisasse adicionar texto dinâmico (como o nome da pessoa),
+                // o código para desenhar o texto viria aqui.
+
+                // Passo C: Define a imagem final para compartilhamento.
+                this.finalShareImage = canvas.toDataURL('image/png');
+            }).catch(error => {
+                console.error("Erro ao carregar as imagens:", error);
+                alert("Houve um problema ao carregar a imagem ou o template.");
+            });
         },
         async shareImage() {
             if (this.finalShareImage) {
@@ -243,7 +333,7 @@ Vue.createApp({
                 const dataText = await response.text();
                 const lines = dataText.trim().split('\n');
                 const headers = lines[0].trim().split('\t');
-                
+
                 const productsData = [];
                 for (let i = 1; i < lines.length; i++) {
                     const currentLine = lines[i].trim();
@@ -274,7 +364,7 @@ Vue.createApp({
                 if (savedProductQuantities) {
                     const parsedQuantities = JSON.parse(savedProductQuantities);
                     console.log('Parsed productQuantities:', parsedQuantities);
-                    
+
                     // Create a new array with updated quantities
                     const updatedProductsData = productsData.map(product => {
                         const savedItem = parsedQuantities.find(item => item.code === product.code);
@@ -339,25 +429,31 @@ Vue.createApp({
             }
         },
         async fetchAddressFromCEP() {
-            const cep = this.formData.cep.replace(/\D/g, '');
+            const cepRaw = this.formData.cep;
+
+            if (!cepRaw) return;
+
+            const cep = String(cepRaw || '').replace(/\D/g, '');
             if (cep.length === 8) {
                 try {
                     const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
                     const data = await response.json();
+
                     if (!data.erro) {
-                        this.formData.endereco = data.logradouro.toUpperCase();
-                        this.formData.bairro = data.bairro.toUpperCase();
-                        this.formData.cidade = data.localidade.toUpperCase();
-                        this.formData.uf = data.uf.toUpperCase();
+                        this.formData.endereco = data.logradouro?.toUpperCase() || '';
+                        this.formData.bairro = data.bairro?.toUpperCase() || '';
+                        this.formData.cidade = data.localidade?.toUpperCase() || '';
+                        this.formData.uf = data.uf?.toUpperCase() || '';
                     } else {
                         alert('CEP não encontrado.');
                     }
                 } catch (error) {
                     console.error('Erro ao buscar CEP:', error);
-                    alert('Não foi possível buscar o CEP. Verifique sua conexão.');
+                    alert('Erro ao buscar endereço.');
                 }
             }
-        },
+        }
+        ,
         async searchAddress() {
             if (!this.formData.uf || !this.formData.cidade || this.formData.endereco.length <= 2) {
                 this.streets = [];
@@ -426,7 +522,7 @@ Vue.createApp({
             this.generatePDF();
             this.totalSignatures++;
             this.sendToGoogleForm();
-            
+
             // Pergunta ao usuário se deseja compartilhar a conquista
             if (confirm('Assinatura finalizada! Deseja tirar uma foto e compartilhar sua conquista?')) {
                 this.openPhotoShareModal();
@@ -457,7 +553,7 @@ Vue.createApp({
                 // NOME
                 let nome = this.formData.nome.toUpperCase();
                 for (let i = 0; i < nome.length; i++) {
-                    doc.text(nome[i], 27 + i * 4.2, 33); 
+                    doc.text(nome[i], 27 + i * 4.2, 33);
                 }
 
                 // CPF
@@ -549,7 +645,6 @@ Vue.createApp({
                 }
             }
 
-            // Adiciona as quantidades dos produtos ao FormData
             this.products.forEach(product => {
                 if (product.quantity > 0) {
                     let entryId;
@@ -579,45 +674,23 @@ Vue.createApp({
                 body: formData,
                 mode: 'no-cors' // Importante para evitar erros de CORS com o Google Forms
             })
-            .then(() => {
-                console.log('Dados enviados para o Google Forms com sucesso (em segundo plano).');
-            })
-            .catch(error => {
-                console.error('Erro ao enviar dados para o Google Forms:', error);
-                alert('Ocorreu um erro ao enviar os dados. Por favor, tente novamente.');
-            });
+                .then(() => {
+                    console.log('Dados enviados para o Google Forms com sucesso (em segundo plano).');
+                })
+                .catch(error => {
+                    console.error('Erro ao enviar dados para o Google Forms:', error);
+                    alert('Ocorreu um erro ao enviar os dados. Por favor, tente novamente.');
+                });
         },
         saveProductQuantities() {
             const productQuantities = this.products.map(p => ({ code: p.code, quantity: p.quantity }));
             localStorage.setItem('productQuantities', JSON.stringify(productQuantities));
             console.log('Saved product quantities to localStorage:', productQuantities);
         },
-        formatCPF() {
-            let value = this.formData.cpf.replace(/\D/g, ''); // Remove tudo que não é dígito
-            if (value.length > 11) {
-                value = value.substring(0, 11);
-            }
-            if (value.length > 9) {
-                value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
-            } else if (value.length > 6) {
-                value = value.replace(/^(\d{3})(\d{3})(\d{3})$/, '$1.$2.$3');
-            } else if (value.length > 3) {
-                value = value.replace(/^(\d{3})(\d{3})$/, '$1.$2');
-            }
-            this.formData.cpf = value;
-        },
-        formatCEP() {
-            let value = this.formData.cep.replace(/\D/g, ''); // Remove tudo que não é dígito
-            if (value.length > 8) {
-                value = value.substring(0, 8);
-            }
-            if (value.length > 5) {
-                value = value.replace(/^(\d{5})(\d{3})$/, '$1-$2');
-            }
-            this.formData.cep = value;
-        },
+        
+        
         formatTEL(value) {
-            value = value.replace(/\D/g, ''); 
+            value = value.replace(/\D/g, '');
 
             if (value.length > 11) {
                 value = value.substring(0, 11);

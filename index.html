@@ -6,6 +6,7 @@
     <title>Minha Porção do Maná para 2025</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">  
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -30,6 +31,7 @@
                 </div>
                 <h3>MINHA PORÇÃO DO MANÁ PARA 2026</h3>
                 <p>Faça sua escolha</p>
+                <button @click="openPhotoShareModal">TESTAR CAMERA</button>
             </div>
 
             <div class="form-container">
@@ -92,7 +94,7 @@
                         </div>
                         <div class="form-group cpf-width">
                             <label class="form-label">CPF</label>
-                            <input type="number" class="form-input" id="cpf" v-model="formData.cpf" @input="formatCPF" placeholder="000.000.000-00">
+                            <input type="text" class="form-input" id="cpf" v-model="formData.cpf" placeholder="000.000.000-00">
                         </div>
                         <div class="form-group distrito-width">
                             <label class="form-label">Distrito</label>
@@ -121,7 +123,7 @@
                         </div>
                         <div class="form-group cep-width">
                             <label class="form-label">CEP</label>
-                            <input type="number" class="form-input" id="cep" v-model="formData.cep" @input="formatCEP" @blur="fetchAddressFromCEP" placeholder="00000-000">
+                            <input type="text" class="form-input" id="cep" v-model="formData.cep" @blur="fetchAddressFromCEP" placeholder="00000-000" maxlength="9">
                         </div>
                         <div class="form-group cp-width">
                             <label class="form-label">Código Postal</label>
@@ -180,23 +182,34 @@
         <!-- Novo Modal para Compartilhamento de Foto -->
         <div v-if="showPhotoShareModal" class="photo-share-modal-overlay">
             <div class="photo-share-modal-content">
-                <h2>Compartilhe sua Conquista!</h2>
-                <p>Tire uma foto e junte-a ao seu assinômetro para compartilhar nas redes sociais.</p>
+                <h3>Compartilhe sua Conquista!</h3>
 
                 <div class="camera-section" v-if="!capturedImage">
                     <video ref="video" width="320" height="240" autoplay></video>
-                    <button @click="capturePhoto">Tirar Foto</button>
+                    <button @click="capturePhoto">
+                        <i class="material-icons">add_a_photo</i>
+                    </button>
+                    <button @click="closePhotoShareModal">
+                        <i class="material-icons">close</i>
+                    </button>
                 </div>
                 
                 <canvas ref="canvas" width="320" height="240" style="display: none;"></canvas>
 
                 <div class="preview-section" v-if="capturedImage">   
                     <img :src="finalShareImage" alt="Imagem para Compartilhar" class="final-share-image">
-                    <button @click="shareImage" :disabled="!finalShareImage">Compartilhar</button>
-                    <button @click="retakePhoto">Tirar Outra Foto</button>
+                    <button @click="shareImage" :disabled="!finalShareImage" class="icon-button">
+                        <i class="material-icons">share</i>
+                    </button>
+                    <button @click="retakePhoto" class="icon-button">
+                        <i class="material-icons">refresh</i>
+                    </button>
+                    <button @click="closePhotoShareModal">
+                        <i class="material-icons">close</i>
+                    </button>
                 </div>
 
-                <button @click="closePhotoShareModal">Fechar</button>
+                
             </div>
         </div>
     </div>
