@@ -1,5 +1,3 @@
-
-
 Vue.createApp({
     data() {
         return {
@@ -7,6 +5,7 @@ Vue.createApp({
             products: [],
             dataUrlProducts: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSGocezfQekt9igT7GkM-by02hnL0ELUqtM-m3AySn1vqJ7gUdg7dJlz2nZpereA_le8_amweck88nr/pub?gid=0&single=true&output=tsv',
             dataUrlChurch: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSGocezfQekt9igT7GkM-by02hnL0ELUqtM-m3AySn1vqJ7gUdg7dJlz2nZpereA_le8_amweck88nr/pub?gid=1639594837&single=true&output=tsv',
+            dataUrlSignatures: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSGocezfQekt9igT7GkM-by02hnL0ELUqtM-m3AySn1vqJ7gUdg7dJlz2nZpereA_le8_amweck88nr/pub?gid=901102443&single=true&output=tsv',
             churches: [],
             formData: {
                 nome: '',
@@ -31,7 +30,10 @@ Vue.createApp({
             showPhotoShareModal: false,
             capturedImage: null,
             finalShareImage: null,
-            cameraStream: null
+            cameraStream: null,
+            states: [],
+            cities: [],
+            streets: []
         };
     },
     watch: {
@@ -48,15 +50,41 @@ Vue.createApp({
         'formData.endereco'(newValue) { this.formData.endereco = newValue.toUpperCase(); },
         'formData.complemento'(newValue) { this.formData.complemento = newValue.toUpperCase(); },
         'formData.bairro'(newValue) { this.formData.bairro = newValue.toUpperCase(); },
-        'formData.cidade'(newValue) { this.formData.cidade = newValue.toUpperCase(); },
-        'formData.uf'(newValue) { this.formData.uf = newValue.toUpperCase(); },
+        'formData.cidade': function(newValue, oldValue) {
+            this.formData.cidade = newValue.toUpperCase();
+            if (newValue !== oldValue) {
+                this.formData.cep = '';
+                this.formData.cp = '';
+                this.formData.endereco = '';
+                this.formData.numero = '';
+                this.formData.complemento = '';
+                this.formData.bairro = '';
+            }
+        },
+        'formData.uf': function(newValue, oldValue) {
+            this.formData.uf = newValue.toUpperCase();
+            if (newValue !== oldValue) {
+                this.formData.cidade = '';
+                this.formData.cep = '';
+                this.formData.cp = '';
+                this.formData.endereco = '';
+                this.formData.numero = '';
+                this.formData.complemento = '';
+                this.formData.bairro = '';
+                this.cities = [];
+                if (newValue) {
+                    const selectedState = this.states.find(state => state.sigla === newValue);
+                    if (selectedState) {
+                        this.fetchCities(selectedState.id);
+                    }
+                }
+            }
+        },
         'formData.email'(newValue) { this.formData.email = newValue.toLowerCase(); }
     },
     async mounted() {
         this.showImageModal = false; // Ensure modal is hidden on mount
         
-        // VMasker calls removed
-
         const savedFormData = localStorage.getItem('formData');
         if (savedFormData) {
             this.formData = JSON.parse(savedFormData);
@@ -65,6 +93,14 @@ Vue.createApp({
         this.formData.distrito = 'VALE DO JAGUARIBE';
         await this.fetchData();
         this.fetchChurchData();
+        await this.fetchStates();
+        await this.fetchTotalSignatures();
+        if (this.formData.uf) {
+            const selectedState = this.states.find(state => state.sigla === this.formData.uf);
+            if (selectedState) {
+                this.fetchCities(selectedState.id);
+            }
+        }
     },
     methods: {
         openImageModal(imageSrc) {
@@ -105,15 +141,25 @@ Vue.createApp({
         capturePhoto() {
             const video = this.$refs.video;
             const canvas = this.$refs.canvas;
+
+            if (!video || !canvas) {
+                alert('Erro ao acessar câmera ou canvas.');
+                return;
+            }
+
             const context = canvas.getContext('2d');
+            if (!context) {
+                alert('Erro ao preparar imagem.');
+                return;
+            }
 
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
             this.capturedImage = canvas.toDataURL('image/png');
-            this.drawAssinometroOnImage();
-            this.stopCamera(); // Stop camera after capturing
+            this.drawAssinometroOnImage(); // atualiza finalShareImage
+            this.stopCamera(); // desliga a câmera
         },
         async drawAssinometroOnImage() {
             const canvas = this.$refs.canvas;
@@ -264,6 +310,34 @@ Vue.createApp({
                 alert("Não foi possível carregar os dados das igrejas. Verifique o link da planilha ou a conexão com a internet.");
             }
         },
+        async fetchStates() {
+            try {
+                const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! code: ${response.status}`);
+                }
+                this.states = await response.json();
+            } catch (error) {
+                console.error("Falha ao buscar os estados:", error);
+                alert("Não foi possível carregar os estados. Verifique sua conexão.");
+            }
+        },
+        async fetchCities(stateId) {
+            if (!stateId) {
+                this.cities = [];
+                return;
+            }
+            try {
+                const response = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${stateId}/municipios?orderBy=nome`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! code: ${response.status}`);
+                }
+                this.cities = await response.json();
+            } catch (error) {
+                console.error("Falha ao buscar as cidades:", error);
+                alert("Não foi possível carregar as cidades. Verifique sua conexão.");
+            }
+        },
         async fetchAddressFromCEP() {
             const cep = this.formData.cep.replace(/\D/g, '');
             if (cep.length === 8) {
@@ -283,6 +357,34 @@ Vue.createApp({
                     alert('Não foi possível buscar o CEP. Verifique sua conexão.');
                 }
             }
+        },
+        async searchAddress() {
+            if (!this.formData.uf || !this.formData.cidade || this.formData.endereco.length <= 2) {
+                this.streets = [];
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://viacep.com.br/ws/${this.formData.uf}/${this.formData.cidade}/${this.formData.endereco}/json/`);
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    this.streets = data;
+                } else {
+                    this.streets = [];
+                }
+            } catch (error) {
+                console.error('Erro ao buscar endereço:', error);
+                alert('Não foi possível buscar o endereço. Verifique sua conexão.');
+            }
+        },
+        handleAddressBlur(event) {
+            const selectedStreet = this.streets.find(street => street.logradouro.toUpperCase() === event.target.value.toUpperCase());
+            if (selectedStreet) {
+                this.formData.cep = selectedStreet.cep;
+                this.formData.bairro = selectedStreet.bairro;
+            }
+            this.streets = []; // Limpa a lista de sugestões
         },
         increaseQuantity(code) {
             const product = this.products.find(p => p.code === code);
@@ -513,6 +615,48 @@ Vue.createApp({
                 value = value.replace(/^(\d{5})(\d{3})$/, '$1-$2');
             }
             this.formData.cep = value;
-        }
+        },
+        formatTEL(value) {
+            value = value.replace(/\D/g, ''); 
+
+            if (value.length > 11) {
+                value = value.substring(0, 11);
+            }
+
+            if (value.length > 10) {
+                value = value.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+            } else if (value.length > 6) {
+                value = value.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3');
+            } else if (value.length > 2) {
+                value = value.replace(/^(\d{2})(\d*)$/, '($1) $2');
+            } else {
+                value = value.replace(/^(\d*)$/, '($1');
+            }
+            return value;
+        },
+        async fetchTotalSignatures() {
+            try {
+                const response = await fetch(this.dataUrlSignatures);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! code: ${response.status}`);
+                }
+                const dataText = await response.text();
+                const lines = dataText.trim().split('\n');
+                this.totalSignatures = lines.length > 1 ? lines.length - 1 : 0;
+            } catch (error) {
+                console.error("Falha ao buscar o total de assinaturas:", error);
+                this.totalSignatures = 0;
+            }
+        },
     }
 }).mount('#app');
+
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const app = document.getElementById('app').__vue_app__;
+    if (app) {
+        // A função fetchTotalSignatures agora é um método do componente Vue
+        // e será chamada dentro do mounted() do próprio componente.
+        // Não é mais necessário chamá-la aqui.
+    }
+});

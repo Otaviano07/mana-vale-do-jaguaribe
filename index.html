@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minha Porção do Maná para 2025</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -20,7 +21,7 @@
                         <span>Meta do Distrito: <strong>526</strong></span>
                     </div>
                     <div class="counter-display">
-                        <div class="counter-number">{{ totalSignatures.toString().padStart(4, '0') }}</div>
+                        <div class="counter-number">{{ totalSignatures.toString().padStart(3, '0') }}</div>
                         <div class="counter-label">ASSINATURAS</div>
                     </div>
                     <div class="motivational-text">
@@ -93,6 +94,31 @@
                             <label class="form-label">CPF</label>
                             <input type="text" class="form-input" id="cpf" v-model="formData.cpf" @input="formatCPF" placeholder="000.000.000-00">
                         </div>
+                        <div class="form-group distrito-width">
+                            <label class="form-label">Distrito</label>
+                            <input type="text" class="form-input" id="distrito" v-model="formData.distrito" placeholder="Distrito" readonly>
+                        </div>
+                        <div class="form-group igreja-width">
+                            <label class="form-label">Igreja</label>
+                            <input type="text" class="form-input" id="igreja" v-model="formData.igreja" placeholder="Nome da Igreja" list="church-list">
+                            <datalist id="church-list">
+                                <option v-for="church in churches" :value="church"></option>
+                            </datalist>
+                        </div>
+                        <div class="form-group uf-width">
+                            <label class="form-label">UF</label>
+                            <select class="form-input" id="uf" v-model="formData.uf">
+                                <option value="">Selecione</option>
+                                <option v-for="state in states" :key="state.id" :value="state.sigla">{{ state.sigla }}</option>
+                            </select>
+                        </div>
+                        <div class="form-group cidade-width">
+                            <label class="form-label">Cidade</label>
+                            <input type="text" class="form-input" id="cidade" v-model="formData.cidade" placeholder="Cidade" list="city-list">
+                            <datalist id="city-list">
+                                <option v-for="city in cities" :key="city.id" :value="city.nome"></option>
+                            </datalist>
+                        </div>
                         <div class="form-group cep-width">
                             <label class="form-label">CEP</label>
                             <input type="text" class="form-input" id="cep" v-model="formData.cep" @input="formatCEP" @blur="fetchAddressFromCEP" placeholder="00000-000">
@@ -103,7 +129,10 @@
                         </div>
                         <div class="form-group endereco-width">
                             <label class="form-label">Endereço</label>
-                            <input type="text" class="form-input" id="endereco" v-model="formData.endereco" placeholder="Rua, Avenida...">
+                            <input type="text" class="form-input" id="endereco" v-model="formData.endereco" placeholder="Rua, Avenida..." @input="searchAddress" @blur="handleAddressBlur($event)" list="street-list">
+                            <datalist id="street-list">
+                                <option v-for="street in streets" :key="street.cep" :value="street.logradouro"></option>
+                            </datalist>
                         </div>
                         <div class="form-group numero-width">
                             <label class="form-label">Nº</label>
@@ -117,21 +146,13 @@
                             <label class="form-label">Bairro</label>
                             <input type="text" class="form-input" id="bairro" v-model="formData.bairro" placeholder="Bairro">
                         </div>
-                        <div class="form-group cidade-width">
-                            <label class="form-label">Cidade</label>
-                            <input type="text" class="form-input" id="cidade" v-model="formData.cidade" placeholder="Cidade">
-                        </div>
-                        <div class="form-group uf-width">
-                            <label class="form-label">UF</label>
-                            <input type="text" class="form-input" id="uf" v-model="formData.uf" placeholder="UF" maxlength="2">
-                        </div>
                         <div class="form-group fone1-width">
                             <label class="form-label">Fone 1</label>
-                            <input type="tel" class="form-input" id="fone1" v-model="formData.fone1" placeholder="(00) 00000-0000">
+                            <input type="tel" class="form-input" id="fone1" v-model="formData.fone1" @input="formData.fone1 = formatTEL($event.target.value)" placeholder="(00) 00000-0000">
                         </div>
                         <div class="form-group fone2-width">
                             <label class="form-label">Fone 2</label>
-                            <input type="tel" class="form-input" id="fone2" v-model="formData.fone2" placeholder="(00) 00000-0000">
+                            <input type="tel" class="form-input" id="fone2" v-model="formData.fone2" @input="formData.fone2 = formatTEL($event.target.value)" placeholder="(00) 00000-0000">
                         </div>
                         <div class="form-group email-width">
                             <label class="form-label">E-mail</label>
@@ -166,9 +187,10 @@
                     <video ref="video" width="320" height="240" autoplay></video>
                     <button @click="capturePhoto">Tirar Foto</button>
                 </div>
+                
+                <canvas ref="canvas" width="320" height="240" style="display: none;"></canvas>
 
-                <div class="preview-section" v-if="capturedImage">
-                    <canvas ref="canvas" width="320" height="240" style="display: none;"></canvas>
+                <div class="preview-section" v-if="capturedImage">   
                     <img :src="finalShareImage" alt="Imagem para Compartilhar" class="final-share-image">
                     <button @click="shareImage" :disabled="!finalShareImage">Compartilhar</button>
                     <button @click="retakePhoto">Tirar Outra Foto</button>

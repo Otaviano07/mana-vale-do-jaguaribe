@@ -364,26 +364,26 @@ body {
 
 .nome-width {
     grid-column-start: 1;
-    grid-column-end: 3;
+    grid-column-end: 4;
 }
 
-.igreja-width {
+.distrito-width {
     grid-column-start: 1;
     grid-column-end: 3;
 }
 
-.distrito-width {
+.igreja-width {
     grid-column-start: 3;
     grid-column-end: -1;
 }
 
 .endereco-width {
-    grid-column-start: 1;
-    grid-column-end: 3;
+    grid-column-start: 3;
+    grid-column-end: -1;
 }
 
 .complemento-width {
-    grid-column-start: 1;
+    grid-column-start: 2;
     grid-column-end: 3;
 }
 
@@ -393,20 +393,19 @@ body {
 }
 
 .cidade-width {
-    grid-column-start: 1;
-    grid-column-end: 3;
+    grid-column-start: 2;
+    grid-column-end: -1;
 }
 
 .uf-width {
-    grid-column-start: 3;
-    grid-column-end: -1;
+    grid-column-start: 1;
+    grid-column-end: 2;
 }
 
 .email-width {
     grid-column-start: 3;
     grid-column-end: -1;
 }
-
 
 .form-label {
     font-weight: bold;
@@ -421,7 +420,7 @@ body {
     padding: 12px 15px;
     border: 2px solid #e9ecef;
     border-radius: 10px;
-    font-size: 1em;
+    font-size: 1.2em;
     transition: all 0.3s ease;
     background: rgb(252, 236, 146);
 }
