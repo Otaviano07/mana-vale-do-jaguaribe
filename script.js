@@ -279,9 +279,24 @@ Vue.createApp({
                 // A área preta (se for transparente no seu PNG) revelará a foto abaixo.
                 context.drawImage(templateImage, 0, 0, canvas.width, canvas.height);
 
-                // O texto já está no seu template, então não precisamos mais desenhá-lo aqui.
-                // Se você precisasse adicionar texto dinâmico (como o nome da pessoa),
-                // o código para desenhar o texto viria aqui.
+                const assinometroText = this.totalSignatures.toString().padStart(4, '0');
+                const labelText = 'Nº ASSINATURAS: ';
+
+                // Example positions and styles - YOU WILL LIKELY NEED TO ADJUST THESE
+                // These values are placeholders and need to be fine-tuned based on your actual image and desired layout.
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+
+                // Assinometro Number
+                context.font = 'bold 60px Arial'; // Adjust font size and family
+                context.fillStyle = '#c8860d'; // Gold color
+                context.textAlign = 'center';
+                context.fillText(assinometroText, centerX, centerY - 30); // Adjust Y position
+
+                // Assinometro Label
+                context.font = 'bold 24px Arial'; // Adjust font size and family
+                context.fillStyle = 'white'; // White color
+                context.fillText(labelText, centerX, centerY + 10); // Adjust Y position
 
                 // Passo C: Define a imagem final para compartilhamento.
                 this.finalShareImage = canvas.toDataURL('image/png');
