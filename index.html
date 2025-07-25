@@ -41,7 +41,7 @@
                                 <div class="product-name">{{ product.name }}</div>
                                 <div class="product-code">(Cód. {{ product.code }})</div>
                             </div>
-                            <img :src="product.image" :alt="product.name" class="product-image">
+                            <img :src="product.image" :alt="product.name" class="product-image" @click="openImageModal(product.image)">
                             <div class="product-details">
                                 <div class="product-age">{{ product.age }}</div>
                                 <div class="product-price">R$ {{ product.price.toFixed(2).replace('.', ',') }}</div>
@@ -158,6 +158,35 @@
                     <strong>Nota:</strong> Este fôlder não é válido como nota de garantia.<br>
                     Preços válidos até 26/10/2025
                 </div>
+            </div>
+        </div>
+
+        <div v-if="showImageModal" class="image-modal-overlay" @click.self="closeImageModal">
+            <div class="image-modal-content">
+                <span class="image-modal-close" @click="closeImageModal">&times;</span>
+                <img :src="currentModalImage" alt="Zoomed Product Image" class="image-modal-img">
+            </div>
+        </div>
+
+        <!-- Novo Modal para Compartilhamento de Foto -->
+        <div v-if="showPhotoShareModal" class="photo-share-modal-overlay">
+            <div class="photo-share-modal-content">
+                <h2>Compartilhe sua Conquista!</h2>
+                <p>Tire uma foto e junte-a ao seu assinômetro para compartilhar nas redes sociais.</p>
+
+                <div class="camera-section" v-if="!capturedImage">
+                    <video ref="video" width="320" height="240" autoplay></video>
+                    <button @click="capturePhoto">Tirar Foto</button>
+                </div>
+
+                <div class="preview-section" v-if="capturedImage">
+                    <canvas ref="canvas" width="320" height="240" style="display: none;"></canvas>
+                    <img :src="finalShareImage" alt="Imagem para Compartilhar" class="final-share-image">
+                    <button @click="shareImage" :disabled="!finalShareImage">Compartilhar</button>
+                    <button @click="retakePhoto">Tirar Outra Foto</button>
+                </div>
+
+                <button @click="closePhotoShareModal">Fechar</button>
             </div>
         </div>
     </div>

@@ -25,7 +25,13 @@ Vue.createApp({
                 fone2: '',
                 email: ''
             },
-            totalSignatures: 0
+            totalSignatures: 0,
+            showImageModal: false,
+            currentModalImage: '',
+            showPhotoShareModal: false,
+            capturedImage: null,
+            finalShareImage: null,
+            cameraStream: null
         };
     },
     watch: {
@@ -35,6 +41,7 @@ Vue.createApp({
             },
             deep: true
         },
+        
         'formData.nome'(newValue) { this.formData.nome = newValue.toUpperCase(); },
         'formData.igreja'(newValue) { this.formData.igreja = newValue.toUpperCase(); },
         'formData.distrito'(newValue) { this.formData.distrito = newValue.toUpperCase(); },
@@ -45,7 +52,8 @@ Vue.createApp({
         'formData.uf'(newValue) { this.formData.uf = newValue.toUpperCase(); },
         'formData.email'(newValue) { this.formData.email = newValue.toLowerCase(); }
     },
-    mounted() {
+    async mounted() {
+        this.showImageModal = false; // Ensure modal is hidden on mount
         VMasker(document.querySelector('#cpf')).maskPattern('999.999.999-99');
         VMasker(document.querySelector('#cep')).maskPattern('99999-999');
         VMasker(document.querySelector('#fone1')).maskPattern('(99) 99999-9999');
@@ -57,10 +65,131 @@ Vue.createApp({
         }
         
         this.formData.distrito = 'VALE DO JAGUARIBE';
-        this.fetchData();
+        await this.fetchData();
         this.fetchChurchData();
     },
     methods: {
+        openImageModal(imageSrc) {
+            this.currentModalImage = imageSrc;
+            this.showImageModal = true;
+        },
+        closeImageModal() {
+            this.showImageModal = false;
+            this.currentModalImage = '';
+            console.log('Closing image modal');
+        },
+        async openPhotoShareModal() {
+            this.showPhotoShareModal = true;
+            await this.startCamera();
+        },
+        closePhotoShareModal() {
+            this.showPhotoShareModal = false;
+            this.stopCamera();
+            this.capturedImage = null;
+            this.finalShareImage = null;
+            this.resetForm(); // Reseta o formulário após fechar o modal de compartilhamento
+        },
+        async startCamera() {
+            try {
+                this.cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                this.$refs.video.srcObject = this.cameraStream;
+            } catch (err) {
+                console.error('Erro ao acessar a câmera:', err);
+                alert('Não foi possível acessar a câmera. Verifique as permissões.');
+            }
+        },
+        stopCamera() {
+            if (this.cameraStream) {
+                this.cameraStream.getTracks().forEach(track => track.stop());
+                this.cameraStream = null;
+            }
+        },
+        capturePhoto() {
+            const video = this.$refs.video;
+            const canvas = this.$refs.canvas;
+            const context = canvas.getContext('2d');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            this.capturedImage = canvas.toDataURL('image/png');
+            this.drawAssinometroOnImage();
+            this.stopCamera(); // Stop camera after capturing
+        },
+        async drawAssinometroOnImage() {
+            const canvas = this.$refs.canvas;
+            const context = canvas.getContext('2d');
+            const img = new Image();
+            img.src = this.capturedImage;
+
+            img.onload = () => {
+                // Redraw the captured image
+                context.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                // Assinometro text properties (adjust as needed for your design)
+                const assinometroText = this.totalSignatures.toString().padStart(4, '0');
+                const labelText = 'ASSINATURAS';
+                const motivationalText = 'Cada assinatura é uma alma alcançada com a Palavra!';
+
+                // Example positions and styles - YOU WILL LIKELY NEED TO ADJUST THESE
+                // These values are placeholders and need to be fine-tuned based on your actual image and desired layout.
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+
+                // Assinometro Number
+                context.font = 'bold 60px Arial'; // Adjust font size and family
+                context.fillStyle = '#c8860d'; // Gold color
+                context.textAlign = 'center';
+                context.fillText(assinometroText, centerX, centerY - 30); // Adjust Y position
+
+                // Assinometro Label
+                context.font = 'bold 24px Arial'; // Adjust font size and family
+                context.fillStyle = 'white'; // White color
+                context.fillText(labelText, centerX, centerY + 10); // Adjust Y position
+
+                // Motivational Text
+                context.font = 'italic 18px Arial'; // Adjust font size and family
+                context.fillStyle = '#c8860d'; // Gold color
+                context.fillText(motivationalText, centerX, centerY + 50); // Adjust Y position
+
+                this.finalShareImage = canvas.toDataURL('image/png');
+            };
+        },
+        async shareImage() {
+            if (this.finalShareImage) {
+                try {
+                    const blob = await (await fetch(this.finalShareImage)).blob();
+                    const file = new File([blob], 'assinometro_mana.png', { type: 'image/png' });
+
+                    if (navigator.share) {
+                        await navigator.share({
+                            title: 'Minha Porção do Maná 2025',
+                            text: 'Confira minha assinatura no Assinômetro do Maná 2025!',
+                            files: [file],
+                        });
+                        alert('Imagem compartilhada com sucesso!');
+                    } else {
+                        alert('Seu navegador não suporta o compartilhamento nativo. Você pode baixar a imagem e compartilhar manualmente.');
+                        // Fallback for browsers that don't support Web Share API
+                        const link = document.createElement('a');
+                        link.href = this.finalShareImage;
+                        link.download = 'assinometro_mana.png';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }
+                } catch (error) {
+                    console.error('Erro ao compartilhar imagem:', error);
+                    alert('Erro ao compartilhar imagem.');
+                }
+            }
+        },
+        retakePhoto() {
+            this.capturedImage = null;
+            this.finalShareImage = null;
+            this.startCamera();
+        },
         async fetchData() {
             try {
                 const response = await fetch(this.dataUrlProducts);
@@ -77,7 +206,7 @@ Vue.createApp({
                     if (currentLine === '') continue;
 
                     const values = currentLine.split('\t');
-                    const product = {};
+                    const product = { quantity: 0 }; // Initialize quantity to 0
 
                     headers.forEach((header, index) => {
                         const key = header.trim();
@@ -86,6 +215,7 @@ Vue.createApp({
                         if (key === 'price') {
                             product[key] = parseFloat(value.replace(',', '.'));
                         } else if (key === 'quantity') {
+                            // If 'quantity' exists in TSV, use it, otherwise it's already 0
                             product[key] = parseInt(value, 10);
                         } else {
                             product[key] = value;
@@ -93,7 +223,29 @@ Vue.createApp({
                     });
                     productsData.push(product);
                 }
-                this.products = productsData;
+
+                // Apply saved quantities to productsData before assigning to this.products
+                const savedProductQuantities = localStorage.getItem('productQuantities');
+                console.log('Loaded productQuantities from localStorage:', savedProductQuantities);
+                if (savedProductQuantities) {
+                    const parsedQuantities = JSON.parse(savedProductQuantities);
+                    console.log('Parsed productQuantities:', parsedQuantities);
+                    
+                    // Create a new array with updated quantities
+                    const updatedProductsData = productsData.map(product => {
+                        const savedItem = parsedQuantities.find(item => item.code === product.code);
+                        if (savedItem) {
+                            console.log(`Updating product ${product.code} quantity from ${product.quantity} to ${savedItem.quantity}`);
+                            return { ...product, quantity: savedItem.quantity };
+                        }
+                        return product;
+                    });
+                    this.products = updatedProductsData;
+                    console.log('Products after applying saved quantities:', this.products);
+                } else {
+                    this.products = productsData;
+                    console.log('No saved product quantities found. Initial products:', this.products);
+                }
 
             } catch (error) {
                 console.error("Falha ao buscar ou processar o arquivo TSV:", error);
@@ -138,12 +290,14 @@ Vue.createApp({
             const product = this.products.find(p => p.code === code);
             if (product) {
                 product.quantity++;
+                this.saveProductQuantities();
             }
         },
         decreaseQuantity(code) {
             const product = this.products.find(p => p.code === code);
             if (product && product.quantity > 0) {
                 product.quantity--;
+                this.saveProductQuantities();
             }
         },
         updateQuantity(code, event) {
@@ -151,6 +305,7 @@ Vue.createApp({
             if (product) {
                 const value = parseInt(event.target.value) || 0;
                 product.quantity = Math.max(0, value);
+                this.saveProductQuantities();
             }
         },
         calculateTotal() {
@@ -171,7 +326,13 @@ Vue.createApp({
             this.generatePDF();
             this.totalSignatures++;
             this.sendToGoogleForm();
-            this.resetForm();
+            
+            // Pergunta ao usuário se deseja compartilhar a conquista
+            if (confirm('Assinatura finalizada! Deseja tirar uma foto e compartilhar sua conquista?')) {
+                this.openPhotoShareModal();
+            } else {
+                this.resetForm(); // Reseta o formulário apenas se não for compartilhar
+            }
         },
         generatePDF() {
             const img = new Image();
@@ -257,6 +418,7 @@ Vue.createApp({
             };
             this.paymentMethod = 'cartao';
             localStorage.removeItem('formData');
+            localStorage.removeItem('productQuantities');
         },
         sendToGoogleForm() {
             const baseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSc5Q5NN8K9SraLjdnu0y5QLeiIHhazrNOPARRRBgtTSZrxDDQ/viewform?usp=pp_url';
@@ -311,6 +473,11 @@ Vue.createApp({
                 }
             }
             window.open(formUrl, '_blank');
+        },
+        saveProductQuantities() {
+            const productQuantities = this.products.map(p => ({ code: p.code, quantity: p.quantity }));
+            localStorage.setItem('productQuantities', JSON.stringify(productQuantities));
+            console.log('Saved product quantities to localStorage:', productQuantities);
         }
     }
 }).mount('#app');
