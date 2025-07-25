@@ -262,7 +262,7 @@ Vue.createApp({
                 }),
                 new Promise(resolve => {
                     templateImage.onload = resolve;
-                    templateImage.src = 'fundo.png'; // Caminho para o seu template
+                    templateImage.src = "img/fundo.png"; // Caminho para o seu template
                 })
             ]);
 
