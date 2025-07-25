@@ -50,35 +50,18 @@ Vue.createApp({
         'formData.endereco'(newValue) { this.formData.endereco = newValue.toUpperCase(); },
         'formData.complemento'(newValue) { this.formData.complemento = newValue.toUpperCase(); },
         'formData.bairro'(newValue) { this.formData.bairro = newValue.toUpperCase(); },
-        'formData.cidade': function (newValue, oldValue) {
+        'formData.cidade': function (newValue) {
             this.formData.cidade = newValue.toUpperCase();
-            if (newValue !== oldValue) {
-                this.formData.cep = '';
-                this.formData.cp = '';
-                this.formData.endereco = '';
-                this.formData.numero = '';
-                this.formData.complemento = '';
-                this.formData.bairro = '';
-            }
         },
-        'formData.uf': function (newValue, oldValue) {
+        'formData.uf': function (newValue) {
             this.formData.uf = newValue.toUpperCase();
-            if (newValue !== oldValue) {
-                this.formData.cidade = '';
-                this.formData.cep = '';
-                this.formData.cp = '';
-                this.formData.endereco = '';
-                this.formData.numero = '';
-                this.formData.complemento = '';
-                this.formData.bairro = '';
-                this.cities = [];
-                if (newValue) {
-                    const selectedState = this.states.find(state => state.sigla === newValue);
-                    if (selectedState) {
-                        this.fetchCities(selectedState.id);
-                    }
+            if (newValue) {
+                const selectedState = this.states.find(state => state.sigla === newValue);
+                if (selectedState) {
+                    this.fetchCities(selectedState.id);
                 }
             }
+
         },
         'formData.email'(newValue) { this.formData.email = newValue.toLowerCase(); },
         'formData.cpf'(newValue) {
@@ -145,7 +128,6 @@ Vue.createApp({
             this.stopCamera();
             this.capturedImage = null;
             this.finalShareImage = null;
-            this.resetForm(); // Reseta o formulário após fechar o modal de compartilhamento
         },
         async startCamera() {
             console.log('startCamera called. this.$refs.video:', this.$refs.video);
@@ -408,10 +390,16 @@ Vue.createApp({
         async fetchAddressFromCEP() {
             const cepRaw = this.formData.cep;
 
+            console.log('Fetching address for CEP:', cepRaw);
+
+
             if (!cepRaw) return;
 
             const cep = String(cepRaw || '').replace(/\D/g, '');
+
+            console.log('Formatted CEP:', cep);
             if (cep.length === 8) {
+                console.log('length is 8, fetching address', cep.length);
                 try {
                     const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
                     const data = await response.json();
@@ -486,7 +474,7 @@ Vue.createApp({
                 return total + (product.price * product.quantity);
             }, 0);
         },
-        submitForm() {
+        async submitForm() {
             const hasProducts = this.products.some(p => p.quantity > 0);
             if (!hasProducts) {
                 alert('Por favor, selecione pelo menos um produto.');
@@ -496,66 +484,85 @@ Vue.createApp({
                 alert('Por favor, preencha os campos obrigatórios: Nome, CPF e E-mail.');
                 return;
             }
-            this.generatePDF();
             this.totalSignatures++;
-            this.sendToGoogleForm();
+            await this.sendToGoogleForm();
+            
 
             // Pergunta ao usuário se deseja compartilhar a conquista
-            if (confirm('Assinatura finalizada! Deseja tirar uma foto e compartilhar sua conquista?')) {
+            if (confirm('Assinatura finalizada!\nDeseja imprimir o folder do Maná 2025?')) {
+                await this.generatePDF();
+            } 
+            else if (confirm('Deseja tirar uma foto e compartilhar sua conquista?')) {
                 this.openPhotoShareModal();
             } else {
-                this.resetForm(); // Reseta o formulário apenas se não for compartilhar
+                //this.resetForm(); // Reseta o formulário apenas se não for compartilhar
             }
         },
         generatePDF() {
-            const img = new Image();
-            img.crossOrigin = "anonymous";
-            img.src = "img/fundo.png";
+            return new Promise(resolve => {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.src = "img/folder.jpg";
 
-            img.onload = () => {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                img.onload = () => {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-                const pageWidth = doc.internal.pageSize.getWidth();
-                const pageHeight = doc.internal.pageSize.getHeight();
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const pageHeight = doc.internal.pageSize.getHeight();
+                    const font = './fonts/Roboto_Mono/static/RobotoMono-Regular.ttf';
 
-                // Adiciona o fundo
-                doc.addImage(img, 'JPEG', 0, 0, pageWidth, pageHeight);
+                    // Adiciona o fundo
+                    doc.addImage(img, 'JPEG', 0, 0, pageWidth, pageHeight);
 
-                // Exemplo de preenchimento dos campos (ajuste as coordenadas conforme necessidade)
-                doc.setFont("helvetica", "normal");
-                doc.setFontSize(10);
-                doc.setTextColor(0, 0, 0);
+                    // Exemplo de preenchimento dos campos (ajuste as coordenadas conforme necessidade)
+                    doc.setFont(font);
+                    doc.setFontSize(10);
+                    doc.setTextColor(0, 0, 0);
 
-                // NOME
-                let nome = this.formData.nome.toUpperCase();
-                for (let i = 0; i < nome.length; i++) {
-                    doc.text(nome[i], 27 + i * 4.2, 33);
-                }
+                    // NOME
+                    let nome = this.formData.nome.toUpperCase();
+                    for (let i = 0; i < nome.length; i++) {
+                        doc.text(nome[i], 33 + i * 5.1, 31.5);
+                    }
 
-                // CPF
-                let cpf = this.formData.cpf.replace(/\D/g, '');
-                for (let i = 0; i < cpf.length; i++) {
-                    doc.text(cpf[i], 27 + i * 4.2, 41);
-                }
+                    // CPF
+                    let cpf = this.formData.cpf.replace(/\D/g, '');
+                    for (let i = 0; i < cpf.length; i++) {
+                        doc.text(cpf[i], 28 + i * 5.1, 37.5);
+                    }
 
-                // IGREJA
-                let igreja = this.formData.igreja.toUpperCase();
-                for (let i = 0; i < igreja.length; i++) {
-                    doc.text(igreja[i], 102 + i * 4.2, 41);
-                }
+                    // IGREJA
+                    let igreja = this.formData.igreja.toUpperCase();
+                    for (let i = 0; i < igreja.length; i++) {
+                        doc.text(igreja[i], 99 + i * 5.1, 37.5);
+                    }
 
-                // Exemplo adicional: DISTRITO
-                let distrito = this.formData.distrito?.toUpperCase() || "";
-                for (let i = 0; i < distrito.length; i++) {
-                    doc.text(distrito[i], 27 + i * 4.2, 49);
-                }
+                    // DISTRITO
+                    let distrito = this.formData.distrito.toUpperCase();
+                    for (let i = 0; i < distrito.length; i++) {
+                        doc.text(distrito[i], 53.5 + i * 5.1, 43.5);
+                    }
 
-                // Após preencher tudo:
-                doc.save(`formulario_mana_2025_${this.formData.nome.replace(/\s+/g, '_')}.pdf`);
-            };
+                    // ENDERECO
+                    let endereco = this.formData.endereco.toUpperCase();
+                    for (let i = 0; i < endereco.length; i++) {
+                        doc.text(endereco[i], 43.5 + i * 5.1, 49.5);
+                    }
+
+                    // NUMERO
+                    let numero = String(this.formData.numero).replace(/\D/g, '');
+                    for (let i = 0; i < numero.length; i++) {
+                        doc.text(numero[i], 160 + i * 5.1, 49.5);
+                    }
+
+                    // Após preencher tudo:
+                    doc.save(`formulario_mana_2025_${this.formData.nome.replace(/\s+/g, '_')}.pdf`);
+                    resolve();
+                };
+            });
         },
-        formatTextForPDF(text, maxLength) {
+            formatTextForPDF(text, maxLength) {
             if (!text) return '';
             const chars = text.toString().substring(0, maxLength).split('');
             return chars.join(' ');
@@ -646,7 +653,7 @@ Vue.createApp({
                 }
             });
 
-            fetch(baseUrl, {
+            return fetch(baseUrl, {
                 method: 'POST',
                 body: formData,
                 mode: 'no-cors' // Importante para evitar erros de CORS com o Google Forms
@@ -657,6 +664,7 @@ Vue.createApp({
                 .catch(error => {
                     console.error('Erro ao enviar dados para o Google Forms:', error);
                     alert('Ocorreu um erro ao enviar os dados. Por favor, tente novamente.');
+                    throw error; // Rejeita a Promise para que o await em submitForm capture o erro
                 });
         },
         saveProductQuantities() {
