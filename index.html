@@ -179,22 +179,26 @@
             </div>
         </div>
 
-        <!-- Novo Modal para Compartilhamento de Foto -->
         <div v-if="showPhotoShareModal" class="photo-share-modal-overlay">
             <div class="photo-share-modal-content">
                 <h3>Compartilhe sua Conquista!</h3>
 
-                <div class="camera-section" v-if="!capturedImage">
-                    <video ref="video" width="320" height="240" autoplay></video>
-                    <button @click="capturePhoto">
-                        <i class="material-icons">add_a_photo</i>
-                    </button>
-                    <button @click="closePhotoShareModal">
-                        <i class="material-icons">close</i>
-                    </button>
+                <div class="camera-section" v-if="!capturedImage && showPhotoShareModal">
+                    <div class="camera-frame-container">
+                        <video ref="video" autoplay playsinline></video>
+                        <img src="img/fundo.png" alt="Moldura" class="camera-overlay-frame">
+                    </div>
+                    <div class="camera-controls">
+                        <button @click="capturePhoto">
+                            <i class="material-icons">add_a_photo</i>
+                        </button>
+                        <button @click="closePhotoShareModal">
+                            <i class="material-icons">close</i>
+                        </button>
+                    </div>
                 </div>
                 
-                <canvas ref="canvas" width="320" height="240" style="display: none;"></canvas>
+                <canvas ref="canvas" width="1080" height="1920" style="display: none;"></canvas>
 
                 <div class="preview-section" v-if="capturedImage">   
                     <img :src="finalShareImage" alt="Imagem para Compartilhar" class="final-share-image">

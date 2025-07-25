@@ -148,6 +148,7 @@ Vue.createApp({
             this.resetForm(); // Reseta o formulário após fechar o modal de compartilhamento
         },
         async startCamera() {
+            console.log('startCamera called. this.$refs.video:', this.$refs.video);
             try {
                 this.cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
                 this.$refs.video.srcObject = this.cameraStream;
@@ -207,45 +208,6 @@ Vue.createApp({
             this.drawAssinometroOnImage(); // atualiza finalShareImage
             this.stopCamera(); // desliga a câmera
         },
-        async drawAssinometroOnImagem() {
-            const canvas = this.$refs.canvas;
-            const context = canvas.getContext('2d');
-            const img = new Image();
-            img.src = this.capturedImage;
-
-            img.onload = () => {
-                // Redraw the captured image
-                context.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                // Assinometro text properties (adjust as needed for your design)
-                const assinometroText = this.totalSignatures.toString().padStart(4, '0');
-                const labelText = 'ASSINATURAS';
-                const motivationalText = 'Cada assinatura é uma alma alcançada com a Palavra!';
-
-                // Example positions and styles - YOU WILL LIKELY NEED TO ADJUST THESE
-                // These values are placeholders and need to be fine-tuned based on your actual image and desired layout.
-                const centerX = canvas.width / 2;
-                const centerY = canvas.height / 2;
-
-                // Assinometro Number
-                context.font = 'bold 60px Arial'; // Adjust font size and family
-                context.fillStyle = '#c8860d'; // Gold color
-                context.textAlign = 'center';
-                context.fillText(assinometroText, centerX, centerY - 30); // Adjust Y position
-
-                // Assinometro Label
-                context.font = 'bold 24px Arial'; // Adjust font size and family
-                context.fillStyle = 'white'; // White color
-                context.fillText(labelText, centerX, centerY + 10); // Adjust Y position
-
-                // Motivational Text
-                context.font = 'italic 18px Arial'; // Adjust font size and family
-                context.fillStyle = '#c8860d'; // Gold color
-                context.fillText(motivationalText, centerX, centerY + 50); // Adjust Y position
-
-                this.finalShareImage = canvas.toDataURL('image/png');
-            };
-        },
         async drawAssinometroOnImage() {
             const canvas = this.$refs.canvas;
             const context = canvas.getContext('2d');
@@ -280,23 +242,23 @@ Vue.createApp({
                 context.drawImage(templateImage, 0, 0, canvas.width, canvas.height);
 
                 const assinometroText = this.totalSignatures.toString().padStart(4, '0');
-                const labelText = 'Nº ASSINATURAS: ';
+                const labelText = 'Nº ASSINATURA: ';
 
                 // Example positions and styles - YOU WILL LIKELY NEED TO ADJUST THESE
                 // These values are placeholders and need to be fine-tuned based on your actual image and desired layout.
-                const centerX = canvas.width / 2;
-                const centerY = canvas.height / 2;
+                const centerX = canvas.width / 2 + 300;
+                const centerY = canvas.height / 2 + 550;
 
                 // Assinometro Number
                 context.font = 'bold 60px Arial'; // Adjust font size and family
                 context.fillStyle = '#c8860d'; // Gold color
                 context.textAlign = 'center';
-                context.fillText(assinometroText, centerX, centerY - 30); // Adjust Y position
+                context.fillText(assinometroText, centerX, centerY); // Adjust Y position
 
                 // Assinometro Label
-                context.font = 'bold 24px Arial'; // Adjust font size and family
+                context.font = 'bold 40px Arial'; // Adjust font size and family
                 context.fillStyle = 'white'; // White color
-                context.fillText(labelText, centerX, centerY + 10); // Adjust Y position
+                context.fillText(labelText, centerX-240, centerY-7); // Adjust Y position
 
                 // Passo C: Define a imagem final para compartilhamento.
                 this.finalShareImage = canvas.toDataURL('image/png');
@@ -548,7 +510,7 @@ Vue.createApp({
         generatePDF() {
             const img = new Image();
             img.crossOrigin = "anonymous";
-            img.src = "img/fundo.jpg";
+            img.src = "img/fundo.png";
 
             img.onload = () => {
                 const { jsPDF } = window.jspdf;

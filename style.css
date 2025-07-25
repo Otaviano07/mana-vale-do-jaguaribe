@@ -612,12 +612,8 @@ body {
     }
 
     .form-input {
-        padding: 12px 15px;
-        border: 2px solid #e9ecef;
-        border-radius: 10px;
-        font-size: 1.2em;
-        transition: all 0.3s ease;
-        background: rgb(252, 236, 146);
+        padding: 10px 12px;
+        font-size: 0.9em;
     }
 
     .form-input:focus {
@@ -661,7 +657,6 @@ body {
     }
 }
 
-/* Image Modal Styles */
 .image-modal-overlay {
     position: fixed;
     top: 0;
@@ -820,3 +815,40 @@ body {
     box-shadow: none;
     transform: none;
 }
+
+/* Styles for camera frame overlay */
+.camera-frame-container {
+    position: relative;
+    width: 100%; /* Adjust as needed */
+    max-width: 400px; /* Same as video max-width */
+    margin: 0 auto 20px auto;
+    position: relative;
+    width: 100%;
+    padding-bottom: 177.77%; /* Proporção 9:16 (altura/largura * 100) */
+    height: 0;
+    overflow: hidden;
+    border: 2px solid #c8860d;
+    border-radius: 10px;
+}
+
+.camera-frame-container video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1; /* Video abaixo da moldura */
+}
+
+.camera-overlay-frame {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensure the frame covers the video area */
+    z-index: 2; /* Moldura acima do vídeo */
+    pointer-events: none; /* Allow clicks to pass through to the video */
+}
+
