@@ -467,28 +467,163 @@ body {
 }
 
 @media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
     .container {
-        margin: 10px;
-        border-radius: 15px;
+        margin: 0;
+        border-radius: 10px;
     }
     
+    .header {
+        padding: 20px;
+    }
+
     .header h1 {
+        font-size: 1.8em;
+        padding: 10px;
+    }
+
+    .header h2 {
+        font-size: 2.2em;
+        margin: 15px 0;
+    }
+
+    .header h3 {
+        font-size: 1.3em;
+    }
+
+    .assinometro {
+        padding: 20px;
+        margin: 20px 0;
+    }
+
+    .assinometro h3 {
         font-size: 2em;
+    }
+
+    .meta-info {
+        font-size: 1.1em;
+    }
+
+    .counter-display {
+        padding: 15px;
+    }
+
+    .counter-number {
+        font-size: 3em;
+        letter-spacing: 5px;
+    }
+
+    .counter-label {
+        font-size: 1em;
+        letter-spacing: 1px;
+    }
+
+    .motivational-text {
+        font-size: 1em;
     }
     
     .form-container {
         padding: 20px;
     }
     
+    .section-title {
+        font-size: 1.5em;
+        margin-bottom: 20px;
+    }
+
     .products-grid {
         grid-template-columns: 1fr;
+        gap: 15px;
     }
-    
+
+    .product-card {
+        padding: 15px;
+    }
+
+    .product-name {
+        font-size: 1em;
+    }
+
+    .product-code {
+        font-size: 0.8em;
+    }
+
+    .product-price {
+        font-size: 1.1em;
+    }
+
+    .quantity-control {
+        gap: 5px;
+    }
+
+    .quantity-btn {
+        width: 25px;
+        height: 25px;
+        font-size: 0.9em;
+    }
+
+    .quantity-input {
+        width: 50px;
+        padding: 6px;
+        font-size: 1em;
+    }
+
+    .total-section {
+        padding: 20px;
+    }
+
+    .total-row {
+        font-size: 1.3em;
+    }
+
+    .total-amount {
+        font-size: 1.5em;
+    }
+
     .payment-methods {
         flex-direction: column;
+        gap: 15px;
+    }
+
+    .payment-option {
+        padding: 12px 15px;
+        min-width: unset;
     }
     
     .form-grid {
         grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .nome-width, .cpf-width, .cep-width, .igreja-width, .distrito-width,
+    .endereco-width, .numero-width, .cp-width, .complemento-width,
+    .bairro-width, .cidade-width, .uf-width, .fone1-width, .fone2-width,
+    .email-width {
+        grid-column-start: auto;
+        grid-column-end: auto;
+    }
+
+    .form-label {
+        font-size: 0.8em;
+    }
+
+    .form-input {
+        padding: 10px 12px;
+        font-size: 0.9em;
+    }
+
+    .submit-btn {
+        padding: 12px 30px;
+        font-size: 1.1em;
+        max-width: 250px;
+        margin: 20px auto 0;
+    }
+
+    .note {
+        padding: 10px;
+        font-size: 0.8em;
     }
 }
