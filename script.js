@@ -54,10 +54,8 @@ Vue.createApp({
     },
     async mounted() {
         this.showImageModal = false; // Ensure modal is hidden on mount
-        VMasker(document.querySelector('#cpf')).maskPattern('999.999.999-99');
-        VMasker(document.querySelector('#cep')).maskPattern('99999-999');
-        VMasker(document.querySelector('#fone1')).maskPattern('(99) 99999-9999');
-        VMasker(document.querySelector('#fone2')).maskPattern('(99) 99999-9999');
+        
+        // VMasker calls removed
 
         const savedFormData = localStorage.getItem('formData');
         if (savedFormData) {
@@ -421,8 +419,8 @@ Vue.createApp({
             localStorage.removeItem('productQuantities');
         },
         sendToGoogleForm() {
-            const baseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSc5Q5NN8K9SraLjdnu0y5QLeiIHhazrNOPARRRBgtTSZrxDDQ/viewform?usp=pp_url';
-            let formUrl = baseUrl;
+            const baseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSc5Q5NN8K9SraLjdnu0y5QLeiIHhazrNOPARRRBgtTSZrxDDQ/formResponse'; // Endpoint de submissão
+            let formData = new FormData();
 
             const formFields = {
                 'entry.732388561': this.formData.nome, // NOME
@@ -442,7 +440,14 @@ Vue.createApp({
                 'entry.365082788': this.formData.email, // EMAIL
             };
 
-            // Add product quantities to form fields
+            // Adiciona os dados pessoais ao FormData
+            for (const key in formFields) {
+                if (formFields[key]) {
+                    formData.append(key, formFields[key]);
+                }
+            }
+
+            // Adiciona as quantidades dos produtos ao FormData
             this.products.forEach(product => {
                 if (product.quantity > 0) {
                     let entryId;
@@ -462,22 +467,52 @@ Vue.createApp({
                         default: entryId = null; break;
                     }
                     if (entryId) {
-                        formFields[entryId] = product.quantity;
+                        formData.append(entryId, product.quantity);
                     }
                 }
             });
 
-            for (const key in formFields) {
-                if (formFields[key]) {
-                    formUrl += `&${key}=${encodeURIComponent(formFields[key])}`;
-                }
-            }
-            window.open(formUrl, '_blank');
+            fetch(baseUrl, {
+                method: 'POST',
+                body: formData,
+                mode: 'no-cors' // Importante para evitar erros de CORS com o Google Forms
+            })
+            .then(() => {
+                console.log('Dados enviados para o Google Forms com sucesso (em segundo plano).');
+            })
+            .catch(error => {
+                console.error('Erro ao enviar dados para o Google Forms:', error);
+                alert('Ocorreu um erro ao enviar os dados. Por favor, tente novamente.');
+            });
         },
         saveProductQuantities() {
             const productQuantities = this.products.map(p => ({ code: p.code, quantity: p.quantity }));
             localStorage.setItem('productQuantities', JSON.stringify(productQuantities));
             console.log('Saved product quantities to localStorage:', productQuantities);
+        },
+        formatCPF() {
+            let value = this.formData.cpf.replace(/\D/g, ''); // Remove tudo que não é dígito
+            if (value.length > 11) {
+                value = value.substring(0, 11);
+            }
+            if (value.length > 9) {
+                value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+            } else if (value.length > 6) {
+                value = value.replace(/^(\d{3})(\d{3})(\d{3})$/, '$1.$2.$3');
+            } else if (value.length > 3) {
+                value = value.replace(/^(\d{3})(\d{3})$/, '$1.$2');
+            }
+            this.formData.cpf = value;
+        },
+        formatCEP() {
+            let value = this.formData.cep.replace(/\D/g, ''); // Remove tudo que não é dígito
+            if (value.length > 8) {
+                value = value.substring(0, 8);
+            }
+            if (value.length > 5) {
+                value = value.replace(/^(\d{5})(\d{3})$/, '$1-$2');
+            }
+            this.formData.cep = value;
         }
     }
 }).mount('#app');
