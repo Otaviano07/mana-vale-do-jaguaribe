@@ -21,6 +21,12 @@
                 <h2>MANÁ 2025</h2>
                 <div class="assinometro">
                     <h3>ASSINÔMETRO</h3>
+                    <button class="refresh-btn" @click="fetchTotalSignatures" :disabled="isFetchingSignatures">
+                        <i class="material-icons" :class="{ 'rotating': isFetchingSignatures }">refresh</i>
+                    </button>
+                    <button class="signatures-table-btn" @click="openSignaturesTableModal">
+                        <i class="material-icons">list_alt</i>
+                    </button>
                     <div class="meta-info">
                         <span>Meta do Distrito: <strong>526</strong></span>
                     </div>
@@ -34,7 +40,6 @@
                 </div>
                 <h3>MINHA PORÇÃO DO MANÁ PARA 2026</h3>
                 <p>Faça sua escolha</p>
-                <button @click="openPhotoShareModal">TESTAR CAMERA</button>
             </div>
 
             <div class="form-container">
@@ -49,42 +54,13 @@
                             <img :src="product.image" :alt="product.name" class="product-image" @click="openImageModal(product.image)">
                             <div class="product-details">
                                 <div class="product-age">{{ product.age }}</div>
-                                <div class="product-price">R$ {{ product.price.toFixed(2).replace('.', ',') }}</div>
                             </div>
                             <div class="quantity-control">
                                 <button class="quantity-btn" @click="decreaseQuantity(product.code)" :disabled="product.quantity <= 0">-</button>
                                 <input type="number" class="quantity-input" v-model.number="product.quantity" min="0" @input="updateQuantity(product.code, $event)">
                                 <button class="quantity-btn" @click="increaseQuantity(product.code)">+</button>
                             </div>
-                            <div class="product-subtotal" v-if="product.quantity > 0">
-                                Subtotal: <strong>R$ {{(product.price * product.quantity).toFixed(2).replace('.', ',')}}</strong>
-                            </div>
                         </div>
-                    </div>
-                </div>
-
-                <div class="total-section">
-                    <div class="total-row">
-                        <span>Total:</span>
-                        <span class="total-amount">R$ {{ calculateTotal().toFixed(2).replace('.', ',') }}</span>
-                    </div>
-                </div>
-
-                <div class="payment-section">
-                    <h2 class="section-title">Formas de Pagamento</h2>
-                    <div class="payment-methods">
-                        <label class="payment-option" :class="{ active: paymentMethod === 'cartao' }">
-                            <input type="radio" v-model="paymentMethod" value="cartao">
-                            <span>💳 Cartão de Crédito</span>
-                        </label>
-                        <label class="payment-option" :class="{ active: paymentMethod === 'boleto' }">
-                            <input type="radio" v-model="paymentMethod" value="boleto">
-                            <span>📄 Boleto</span>
-                        </label>
-                        <label class="payment-option" :class="{ active: paymentMethod === 'pix' }">
-                            <input type="radio" v-model="paymentMethod" value="pix">
-                            <span>💰 Dinheiro ou Pix</span>
-                        </label>
                     </div>
                 </div>
 
@@ -93,11 +69,13 @@
                     <div class="form-grid">
                         <div class="form-group nome-width">
                             <label class="form-label">Nome</label>
-                            <input type="text" class="form-input" id="nome" v-model="formData.nome" placeholder="Nome completo">
+                            <input type="text" class="form-input" id="nome" v-model="formData.nome" placeholder="Nome">
+                            <span class="error-message">{{ formErrors.nome }}</span>
                         </div>
-                        <div class="form-group cpf-width">
-                            <label class="form-label">CPF</label>
-                            <input type="text" class="form-input" id="cpf" v-model="formData.cpf" placeholder="000.000.000-00">
+                        <div class="form-group whatsapp-width">
+                            <label class="form-label">Whatsapp</label>
+                            <input type="tel" class="form-input" id="whatsapp" v-model="formData.whatsapp" placeholder="(00) 00000-0000">
+                            <span class="error-message">{{ formErrors.whatsapp }}</span>
                         </div>
                         <div class="form-group distrito-width">
                             <label class="form-label">Distrito</label>
@@ -109,69 +87,13 @@
                             <datalist id="church-list">
                                 <option v-for="church in churches" :value="church"></option>
                             </datalist>
-                        </div>
-                        <div class="form-group uf-width">
-                            <label class="form-label">UF</label>
-                            <select class="form-input" id="uf" v-model="formData.uf">
-                                <option value="">Selecione</option>
-                                <option v-for="state in states" :key="state.id" :value="state.sigla">{{ state.sigla }}</option>
-                            </select>
-                        </div>
-                        <div class="form-group cidade-width">
-                            <label class="form-label">Cidade</label>
-                            <input type="text" class="form-input" id="cidade" v-model="formData.cidade" placeholder="Cidade" list="city-list">
-                            <datalist id="city-list">
-                                <option v-for="city in cities" :key="city.id" :value="city.nome"></option>
-                            </datalist>
-                        </div>
-                        <div class="form-group cep-width">
-                            <label class="form-label">CEP</label>
-                            <input type="tel" class="form-input" id="cep" v-model="formData.cep" @blur="fetchAddressFromCEP" placeholder="00000-000" maxlength="9">
-                        </div>
-                        <div class="form-group cp-width">
-                            <label class="form-label">Código Postal</label>
-                            <input type="number" class="form-input" id="cp" v-model="formData.cp" placeholder="Código Postal">
-                        </div>
-                        <div class="form-group endereco-width">
-                            <label class="form-label">Endereço</label>
-                            <input type="text" class="form-input" id="endereco" v-model="formData.endereco" placeholder="Rua, Avenida..." @input="searchAddress" @blur="handleAddressBlur($event)" list="street-list">
-                            <datalist id="street-list">
-                                <option v-for="street in streets" :key="street.cep" :value="street.logradouro"></option>
-                            </datalist>
-                        </div>
-                        <div class="form-group numero-width">
-                            <label class="form-label">Nº</label>
-                            <input type="number" class="form-input" id="numero" v-model="formData.numero" placeholder="Número">
-                        </div>
-                        <div class="form-group complemento-width">
-                            <label class="form-label">Complemento</label>
-                            <input type="text" class="form-input" id="complemento" v-model="formData.complemento" placeholder="Apt, Casa...">
-                        </div>
-                        <div class="form-group bairro-width">
-                            <label class="form-label">Bairro</label>
-                            <input type="text" class="form-input" id="bairro" v-model="formData.bairro" placeholder="Bairro">
-                        </div>
-                        <div class="form-group fone1-width">
-                            <label class="form-label">Fone 1</label>
-                            <input type="tel" class="form-input" id="fone1" v-model="formData.fone1" @input="formData.fone1 = formatTEL($event.target.value)" placeholder="(00) 00000-0000">
-                        </div>
-                        <div class="form-group fone2-width">
-                            <label class="form-label">Fone 2</label>
-                            <input type="tel" class="form-input" id="fone2" v-model="formData.fone2" @input="formData.fone2 = formatTEL($event.target.value)" placeholder="(00) 00000-0000">
-                        </div>
-                        <div class="form-group email-width">
-                            <label class="form-label">E-mail</label>
-                            <input type="email" class="form-input" id="email" v-model="formData.email" placeholder="seuemail@exemplo.com">
+                            <span class="error-message">{{ formErrors.igreja }}</span>
                         </div>
                     </div>
                 </div>
 
-                <button class="submit-btn" @click="submitForm">Finalizar Assinatura</button>
+                <button class="submit-btn" @click="submitForm">salvar Assinatura</button>
 
-                <div class="note">
-                    <strong>Nota:</strong> Este fôlder não é válido como nota de garantia.<br>
-                    Preços válidos até 26/10/2025
-                </div>
             </div>
         </div>
 
@@ -189,7 +111,7 @@
                 <div class="camera-section" v-if="!capturedImage && showPhotoShareModal">
                     <div class="camera-frame-container">
                         <video ref="video" autoplay playsinline></video>
-                        <img src="img/fundo.png" alt="Moldura" class="camera-overlay-frame">
+                        <img src="img/moldura.png" alt="Moldura" class="camera-overlay-frame">
                     </div>
                     <div class="camera-controls">
                         <button @click="capturePhoto">
@@ -219,6 +141,57 @@
                 
             </div>
         </div>
+
+        <div v-if="showCustomAlert" class="custom-alert-overlay">
+            <div class="custom-alert-box">
+                <p>{{ customAlertMessage }}</p>
+                <button @click="closeCustomAlert">OK</button>
+            </div>
+        </div>
+
+        <div v-if="showLoadingOverlay" class="loading-overlay">
+            <div class="loading-spinner"></div>
+            <p>Carregando...</p>
+        </div>
+
+        <div v-if="showSignaturesTableModal" class="signatures-table-modal-overlay" @click.self="closeSignaturesTableModal">
+            <div class="signatures-table-modal-content">
+                <span class="signatures-table-modal-close" @click="closeSignaturesTableModal">&times;</span>
+                <h3>Assinaturas Realizadas</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Igreja</th>
+                                <th>Distrito</th>
+                                <th v-for="code in allProductCodes" :key="code">{{ productCodeToNameMap[code] }}</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="signature in signaturesData" :key="signature.igreja + signature.timestamp">
+                                <td>{{ signature.igreja }}</td>
+                                <td>{{ signature.distrito }}</td>
+                                <td v-for="code in allProductCodes" :key="code">{{ signature.products[code] || 0 }}</td>
+                                <td>{{ signature.total }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="showCustomConfirm" class="custom-confirm-overlay">
+            <div class="custom-confirm-box">
+                <p>{{ customConfirmMessage }}</p>
+                <div class="confirm-buttons">
+                    <button id="confirm-button-false" @click="confirmAction(false)">Não</button>
+                    <button id="confirm-button-true" @click="confirmAction(true)">Sim</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
     </div>
 
     <script src="script.js"></script>

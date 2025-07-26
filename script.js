@@ -1,7 +1,6 @@
 Vue.createApp({
     data() {
         return {
-            paymentMethod: 'cartao',
             products: [],
             dataUrlProducts: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSGocezfQekt9igT7GkM-by02hnL0ELUqtM-m3AySn1vqJ7gUdg7dJlz2nZpereA_le8_amweck88nr/pub?gid=0&single=true&output=tsv',
             dataUrlChurch: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSGocezfQekt9igT7GkM-by02hnL0ELUqtM-m3AySn1vqJ7gUdg7dJlz2nZpereA_le8_amweck88nr/pub?gid=1639594837&single=true&output=tsv',
@@ -9,20 +8,9 @@ Vue.createApp({
             churches: [],
             formData: {
                 nome: '',
-                cpf: '',
                 igreja: '',
                 distrito: 'VALE DO JAGUARIBE',
-                endereco: '',
-                numero: '',
-                complemento: '',
-                bairro: '',
-                cep: '',
-                cidade: '',
-                cp: '',
-                uf: '',
-                fone1: '',
-                fone2: '',
-                email: ''
+                whatsapp: '',
             },
             totalSignatures: 0,
             showImageModal: false,
@@ -33,7 +21,18 @@ Vue.createApp({
             cameraStream: null,
             states: [],
             cities: [],
-            streets: []
+            showCustomAlert: false,
+            customAlertMessage: '',
+            formErrors: { nome: '', whatsapp: '', igreja: '' },
+            isFetchingSignatures: false,
+            showLoadingOverlay: false,
+            showSignaturesTableModal: false,
+            signaturesData: [],
+            allProductCodes: [],
+            productCodeToNameMap: {},
+            showCustomConfirm: false,
+            customConfirmMessage: '',
+            confirmResolve: null
         };
     },
     watch: {
@@ -44,50 +43,19 @@ Vue.createApp({
             deep: true
         },
 
-        'formData.nome'(newValue) { this.formData.nome = newValue.toUpperCase(); },
-        'formData.igreja'(newValue) { this.formData.igreja = newValue.toUpperCase(); },
         'formData.distrito'(newValue) { this.formData.distrito = newValue.toUpperCase(); },
-        'formData.endereco'(newValue) { this.formData.endereco = newValue.toUpperCase(); },
-        'formData.complemento'(newValue) { this.formData.complemento = newValue.toUpperCase(); },
-        'formData.bairro'(newValue) { this.formData.bairro = newValue.toUpperCase(); },
-        'formData.cidade': function (newValue) {
-            this.formData.cidade = newValue.toUpperCase();
+        'formData.whatsapp'(newValue) { 
+            this.formData.whatsapp = this.formatTEL(newValue); 
+            if (this.formErrors.whatsapp) this.formErrors.whatsapp = '';
         },
-        'formData.uf': function (newValue) {
-            this.formData.uf = newValue.toUpperCase();
-            if (newValue) {
-                const selectedState = this.states.find(state => state.sigla === newValue);
-                if (selectedState) {
-                    this.fetchCities(selectedState.id);
-                }
-            }
-
+        'formData.nome'(newValue) {
+            this.formData.nome = newValue.toUpperCase();
+            if (this.formErrors.nome) this.formErrors.nome = '';
         },
-        'formData.email'(newValue) { this.formData.email = newValue.toLowerCase(); },
-        'formData.cpf'(newValue) {
-            let value = String(newValue || '').replace(/\D/g, ''); // Garante que é string e remove não-dígitos
-            if (value.length > 11) {
-                value = value.substring(0, 11);
-            }
-            if (value.length > 9) {
-                value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
-            } else if (value.length > 6) {
-                value = value.replace(/^(\d{3})(\d{3})(\d{3})$/, '$1.$2.$3');
-            } else if (value.length > 3) {
-                value = value.replace(/^(\d{3})(\d{3})$/, '$1.$2');
-            }
-            this.formData.cpf = value;
+        'formData.igreja'(newValue) {
+            this.formData.igreja = newValue.toUpperCase();
+            if (this.formErrors.igreja) this.formErrors.igreja = '';
         },
-        'formData.cep'(newValue) {
-            let value = String(newValue || '').replace(/\D/g, ''); // Garante que é string e remove não-dígitos
-            if (value.length > 8) {
-                value = value.substring(0, 8);
-            }
-            if (value.length > 5) {
-                value = value.replace(/^(\d{5})(\d{3})$/, '$1-$2');
-            }
-            this.formData.cep = value;
-        }
     },
     async mounted() {
         this.showImageModal = false; // Ensure modal is hidden on mount
@@ -119,6 +87,51 @@ Vue.createApp({
             this.currentModalImage = '';
             console.log('Closing image modal');
         },
+        showAlert(message) {
+            this.customAlertMessage = message;
+            this.showCustomAlert = true;
+        },
+        closeCustomAlert() {
+            this.showCustomAlert = false;
+        },
+        showConfirm(message) {
+            this.customConfirmMessage = message;
+            this.showCustomConfirm = true;
+            return new Promise(resolve => {
+                this.confirmResolve = resolve;
+            });
+        },
+        confirmAction(result) {
+            this.showCustomConfirm = false;
+            if (this.confirmResolve) {
+                this.confirmResolve(result);
+                this.confirmResolve = null;
+            }
+        },
+        validateForm() {
+            this.formErrors = { nome: '', whatsapp: '', igreja: '' };
+            let isValid = true;
+
+            if (!this.formData.nome) {
+                this.formErrors.nome = 'O nome é obrigatório.';
+                isValid = false;
+            }
+
+            if (!this.formData.whatsapp) {
+                this.formErrors.whatsapp = 'O WhatsApp é obrigatório.';
+                isValid = false;
+            } else if (this.formData.whatsapp.replace(/\D/g, '').length < 10) {
+                this.formErrors.whatsapp = 'O número de WhatsApp parece inválido.';
+                isValid = false;
+            }
+
+            if (!this.formData.igreja) {
+                this.formErrors.igreja = 'A igreja é obrigatória.';
+                isValid = false;
+            }
+
+            return isValid;
+        },
         async openPhotoShareModal() {
             this.showPhotoShareModal = true;
             await this.startCamera();
@@ -136,7 +149,7 @@ Vue.createApp({
                 this.$refs.video.srcObject = this.cameraStream;
             } catch (err) {
                 console.error('Erro ao acessar a câmera:', err);
-                alert('Não foi possível acessar a câmera. Verifique as permissões.');
+                this.showAlert('Não foi possível acessar a câmera. Verifique as permissões.');
             }
         },
         stopCamera() {
@@ -150,13 +163,13 @@ Vue.createApp({
             const canvas = this.$refs.canvas;
 
             if (!video || !canvas) {
-                alert('Erro ao acessar câmera ou canvas.');
+                this.showAlert('Erro ao acessar câmera ou canvas.');
                 return;
             }
 
             const context = canvas.getContext('2d');
             if (!context) {
-                alert('Erro ao preparar imagem.');
+                this.showAlert('Erro ao preparar imagem.');
                 return;
             }
 
@@ -206,7 +219,7 @@ Vue.createApp({
                 }),
                 new Promise(resolve => {
                     templateImage.onload = resolve;
-                    templateImage.src = "img/fundo.png"; // Caminho para o seu template
+                    templateImage.src = "img/moldura.png"; // Caminho para o seu template
                 })
             ]);
 
@@ -246,7 +259,7 @@ Vue.createApp({
                 this.finalShareImage = canvas.toDataURL('image/png');
             }).catch(error => {
                 console.error("Erro ao carregar as imagens:", error);
-                alert("Houve um problema ao carregar a imagem ou o template.");
+                this.showAlert("Houve um problema ao carregar a imagem ou o template.");
             });
         },
         async shareImage() {
@@ -261,9 +274,9 @@ Vue.createApp({
                             text: 'Confira minha assinatura no Assinômetro do Maná 2025!',
                             files: [file],
                         });
-                        alert('Imagem compartilhada com sucesso!');
+                        this.showAlert('Imagem compartilhada com sucesso!');
                     } else {
-                        alert('Seu navegador não suporta o compartilhamento nativo. Você pode baixar a imagem e compartilhar manualmente.');
+                        this.showAlert('Seu navegador não suporta o compartilhamento nativo. Você pode baixar a imagem e compartilhar manualmente.');
                         // Fallback for browsers that don't support Web Share API
                         const link = document.createElement('a');
                         link.href = this.finalShareImage;
@@ -274,7 +287,7 @@ Vue.createApp({
                     }
                 } catch (error) {
                     console.error('Erro ao compartilhar imagem:', error);
-                    alert('Erro ao compartilhar imagem.');
+                    this.showAlert('Erro ao compartilhar imagem.');
                 }
             }
         },
@@ -319,22 +332,20 @@ Vue.createApp({
 
                 // Apply saved quantities to productsData before assigning to this.products
                 const savedProductQuantities = localStorage.getItem('productQuantities');
-                console.log('Loaded productQuantities from localStorage:', savedProductQuantities);
                 if (savedProductQuantities) {
                     const parsedQuantities = JSON.parse(savedProductQuantities);
-                    console.log('Parsed productQuantities:', parsedQuantities);
 
                     // Create a new array with updated quantities
                     const updatedProductsData = productsData.map(product => {
                         const savedItem = parsedQuantities.find(item => item.code === product.code);
                         if (savedItem) {
-                            console.log(`Updating product ${product.code} quantity from ${product.quantity} to ${savedItem.quantity}`);
+                            //console.log(`Updating product ${product.code} quantity from ${product.quantity} to ${savedItem.quantity}`);
                             return { ...product, quantity: savedItem.quantity };
                         }
                         return product;
                     });
                     this.products = updatedProductsData;
-                    console.log('Products after applying saved quantities:', this.products);
+                    //console.log('Products after applying saved quantities:', this.products);
                 } else {
                     this.products = productsData;
                     console.log('No saved product quantities found. Initial products:', this.products);
@@ -342,7 +353,7 @@ Vue.createApp({
 
             } catch (error) {
                 console.error("Falha ao buscar ou processar o arquivo TSV:", error);
-                alert("Não foi possível carregar os dados. Verifique o link da planilha ou a conexão com a internet.");
+                this.showAlert("Não foi possível carregar os dados. Verifique o link da planilha ou a conexão com a internet.");
             }
         },
         async fetchChurchData() {
@@ -356,7 +367,7 @@ Vue.createApp({
                 this.churches = lines.slice(1).map(line => line.trim()).filter(line => line !== '');
             } catch (error) {
                 console.error("Falha ao buscar ou processar os dados da igreja:", error);
-                alert("Não foi possível carregar os dados das igrejas. Verifique o link da planilha ou a conexão com a internet.");
+                this.showAlert("Não foi possível carregar os dados das igrejas. Verifique o link da planilha ou a conexão com a internet.");
             }
         },
         async fetchStates() {
@@ -368,7 +379,7 @@ Vue.createApp({
                 this.states = await response.json();
             } catch (error) {
                 console.error("Falha ao buscar os estados:", error);
-                alert("Não foi possível carregar os estados. Verifique sua conexão.");
+                this.showAlert("Não foi possível carregar os estados. Verifique sua conexão.");
             }
         },
         async fetchCities(stateId) {
@@ -384,80 +395,20 @@ Vue.createApp({
                 this.cities = await response.json();
             } catch (error) {
                 console.error("Falha ao buscar as cidades:", error);
-                alert("Não foi possível carregar as cidades. Verifique sua conexão.");
-            }
-        },
-        async fetchAddressFromCEP() {
-            const cepRaw = this.formData.cep;
-
-            console.log('Fetching address for CEP:', cepRaw);
-
-
-            if (!cepRaw) return;
-
-            const cep = String(cepRaw || '').replace(/\D/g, '');
-
-            console.log('Formatted CEP:', cep);
-            if (cep.length === 8) {
-                console.log('length is 8, fetching address', cep.length);
-                try {
-                    const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-                    const data = await response.json();
-
-                    if (!data.erro) {
-                        this.formData.endereco = data.logradouro?.toUpperCase() || '';
-                        this.formData.bairro = data.bairro?.toUpperCase() || '';
-                        this.formData.cidade = data.localidade?.toUpperCase() || '';
-                        this.formData.uf = data.uf?.toUpperCase() || '';
-                    } else {
-                        alert('CEP não encontrado.');
-                    }
-                } catch (error) {
-                    console.error('Erro ao buscar CEP:', error);
-                    alert('Erro ao buscar endereço.');
-                }
-            }
-        }
-        ,
-        async searchAddress() {
-            if (!this.formData.uf || !this.formData.cidade || this.formData.endereco.length <= 2) {
-                this.streets = [];
-                return;
-            }
-
-            try {
-                const response = await fetch(`https://viacep.com.br/ws/${this.formData.uf}/${this.formData.cidade}/${this.formData.endereco}/json/`);
-                const data = await response.json();
-
-                if (data && data.length > 0) {
-                    this.streets = data;
-                } else {
-                    this.streets = [];
-                }
-            } catch (error) {
-                console.error('Erro ao buscar endereço:', error);
-                alert('Não foi possível buscar o endereço. Verifique sua conexão.');
-            }
-        },
-        handleAddressBlur(event) {
-            const selectedStreet = this.streets.find(street => street.logradouro.toUpperCase() === event.target.value.toUpperCase());
-            if (selectedStreet) {
-                this.formData.cep = selectedStreet.cep;
-                this.formData.bairro = selectedStreet.bairro;
-            }
-            this.streets = []; // Limpa a lista de sugestões
-        },
-        increaseQuantity(code) {
-            const product = this.products.find(p => p.code === code);
-            if (product) {
-                product.quantity++;
-                this.saveProductQuantities();
+                this.showAlert("Não foi possível carregar as cidades. Verifique sua conexão.");
             }
         },
         decreaseQuantity(code) {
             const product = this.products.find(p => p.code === code);
             if (product && product.quantity > 0) {
                 product.quantity--;
+                this.saveProductQuantities();
+            }
+        },
+        increaseQuantity(code) {
+            const product = this.products.find(p => p.code === code);
+            if (product) {
+                product.quantity++;
                 this.saveProductQuantities();
             }
         },
@@ -469,19 +420,15 @@ Vue.createApp({
                 this.saveProductQuantities();
             }
         },
-        calculateTotal() {
-            return this.products.reduce((total, product) => {
-                return total + (product.price * product.quantity);
-            }, 0);
-        },
         async submitForm() {
-            const hasProducts = this.products.some(p => p.quantity > 0);
-            if (!hasProducts) {
-                alert('Por favor, selecione pelo menos um produto.');
+            if (!this.validateForm()) {
+                this.showAlert('Por favor, corrija os erros no formulário antes de continuar.');
                 return;
             }
-            if (!this.formData.nome || !this.formData.cpf || !this.formData.email) {
-                alert('Por favor, preencha os campos obrigatórios: Nome, CPF e E-mail.');
+
+            const hasProducts = this.products.some(p => p.quantity > 0);
+            if (!hasProducts) {
+                this.showAlert('Por favor, selecione pelo menos um produto.');
                 return;
             }
             this.totalSignatures++;
@@ -489,145 +436,11 @@ Vue.createApp({
             
 
             // Pergunta ao usuário se deseja compartilhar a conquista
-            if (confirm('Assinatura finalizada!\nDeseja imprimir o folder do Maná 2025?')) {
-                await this.generatePDF();
-            } 
-            else if (confirm('Deseja tirar uma foto e compartilhar sua conquista?')) {
-                this.openPhotoShareModal();
+            if (await this.showConfirm('Deseja tirar uma foto e compartilhar sua conquista?')) {
+                this.openPhotoShareModal(); 
             } else {
-                //this.resetForm(); // Reseta o formulário apenas se não for compartilhar
+                this.resetForm(); 
             }
-        },
-        generatePDF() {
-            return new Promise(resolve => {
-                const img = new Image();
-                img.crossOrigin = "anonymous";
-                img.src = "img/folder_sem.jpg";
-
-                img.onload = () => {
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
-                    const pageWidth = doc.internal.pageSize.getWidth();
-                    const pageHeight = doc.internal.pageSize.getHeight();
-                    const font = './fonts/Roboto_Mono/static/RobotoMono-Regular.ttf';
-
-                    // Adiciona o fundo
-                    doc.addImage(img, 'JPEG', 0, 0, pageWidth, pageHeight);
-
-                    // Exemplo de preenchimento dos campos (ajuste as coordenadas conforme necessidade)
-                    doc.setFont(font);
-                    doc.setFontSize(10);
-                    doc.setTextColor(0, 0, 0);
-
-                    // NOME
-                    let nome = this.formData.nome.toUpperCase();
-                    for (let i = 0; i < nome.length; i++) {
-                        doc.text(nome[i], 33 + i * 3, 31.5);
-                    }
-
-                    // CPF
-                    let cpf = this.formData.cpf.replace(/\D/g, '');
-                    for (let i = 0; i < cpf.length; i++) {
-                        doc.text(cpf[i], 28 + i * 3, 37);
-                    }
-
-                    // IGREJA
-                    let igreja = this.formData.igreja.toUpperCase();
-                    for (let i = 0; i < igreja.length; i++) {
-                        doc.text(igreja[i], 99 + i * 3, 37);
-                    }
-
-                    // DISTRITO
-                    let distrito = this.formData.distrito.toUpperCase();
-                    for (let i = 0; i < distrito.length; i++) {
-                        doc.text(distrito[i], 53.5 + i * 3, 43.5);
-                    }
-
-                    // ENDERECO
-                    let endereco = this.formData.endereco.toUpperCase();
-                    for (let i = 0; i < endereco.length; i++) {
-                        doc.text(endereco[i], 43.5 + i * 3, 48.5);
-                    }
-
-                    // NUMERO
-                    let numero = String(this.formData.numero).replace(/\D/g, '');
-                    for (let i = 0; i < numero.length; i++) {
-                        doc.text(numero[i], 170 + i * 3, 48.5);
-                    }
-
-                    // COMLEMENTO
-                    let complemento = this.formData.complemento.toUpperCase();
-                    for (let i = 0; i < complemento.length; i++) {
-                        doc.text(complemento[i], 48.5 + i * 3, 54.5);
-                    }
-
-                    // BAIRRO
-                    let bairro = this.formData.bairro.toUpperCase();
-                    for (let i = 0; i < bairro.length; i++) {
-                        doc.text(bairro[i], 38.5 + i * 3, 60);
-                    }
-
-                    // CEP
-                    let cep = this.formData.cep.toUpperCase();
-                    for (let i = 0; i < cep.length; i++) {
-                        doc.text(cep[i], 150 + i * 3, 60);
-                    }
-
-                    // CIDADE
-                    let cidade = this.formData.cidade.toUpperCase();
-                    for (let i = 0; i < cidade.length; i++) {
-                        doc.text(cidade[i], 38.5 + i * 3, 66);
-                    }
-
-                    // CP
-                    let cp = String(this.formData.cp).replace(/\D/g, '');
-                    for (let i = 0; i < cp.length; i++) {
-                        doc.text(cp[i], 150 + i * 3, 66);
-                    }
-
-                    // UF
-                    let uf = this.formData.uf.toUpperCase();
-                    for (let i = 0; i < uf.length; i++) {
-                        doc.text(uf[i], 180 + i * 3, 66);
-                    }
-
-                    // FONE 1
-                    let fone1 = this.formData.fone1.toUpperCase();
-                    for (let i = 0; i < fone1.length; i++) {
-                        doc.text(fone1[i], 38.5 + i * 3, 71);
-                    }
-
-                    // FONE 2
-                    let fone2 = this.formData.fone2.toUpperCase();
-                    for (let i = 0; i < fone2.length; i++) {
-                        doc.text(fone2[i], 130 + i * 3, 71);
-                    }
-
-                    // EMAIL
-                    let email = this.formData.email.toUpperCase();
-                    for (let i = 0; i < email.length; i++) {
-                        doc.text(email[i], 33 + i * 3, 77);
-                    }
-
-                    // Após preencher tudo:
-                    doc.save(`formulario_mana_2025_${this.formData.nome.replace(/\s+/g, '_')}.pdf`);
-                    resolve();
-                };
-            });
-        },
-            formatTextForPDF(text, maxLength) {
-            if (!text) return '';
-            const chars = text.toString().substring(0, maxLength).split('');
-            return chars.join(' ');
-        },
-        getPaymentMethodLabel() {
-            const methods = {
-                'cartao': 'Cartão de Crédito',
-                'boleto': 'Boleto',
-                'pix': 'Dinheiro ou Pix'
-            };
-            return methods[this.paymentMethod] || 'Não selecionado';
         },
         resetForm() {
             this.products.forEach(product => {
@@ -635,22 +448,10 @@ Vue.createApp({
             });
             this.formData = {
                 nome: '',
-                cpf: '',
                 igreja: '',
                 distrito: 'VALE DO JAGUARIBE',
-                endereco: '',
-                numero: '',
-                complemento: '',
-                bairro: '',
-                cep: '',
-                cidade: '',
-                cp: '',
-                uf: '',
-                fone1: '',
-                fone2: '',
-                email: ''
+                whatsapp: ''
             };
-            this.paymentMethod = 'cartao';
             localStorage.removeItem('formData');
             localStorage.removeItem('productQuantities');
         },
@@ -660,20 +461,9 @@ Vue.createApp({
 
             const formFields = {
                 'entry.732388561': this.formData.nome, // NOME
-                'entry.1574716751': this.formData.cpf, // CPF
                 'entry.333865204': this.formData.igreja, // IGREJA
                 'entry.529682514': this.formData.distrito, // DISTRITO
-                'entry.1781233763': this.formData.endereco, // ENDERECO
-                'entry.1736056879': this.formData.numero, // NUMERO
-                'entry.50479641': this.formData.complemento, // COMPLEMENTO
-                'entry.1929953233': this.formData.bairro, // BAIRRO
-                'entry.1486174441': this.formData.cidade, // CIDADE
-                'entry.123373047': this.formData.cep, // CEP
-                'entry.1269423802': this.formData.cp, // CODIGO (assuming cp is codigo postal)
-                'entry.1533328364': this.formData.uf, // UF
-                'entry.1725718185': this.formData.fone1, // FONE1
-                'entry.964340878': this.formData.fone2, // FONE2
-                'entry.365082788': this.formData.email, // EMAIL
+                'entry.964340878': this.formData.whatsapp, // WHATSAPP
             };
 
             // Adiciona os dados pessoais ao FormData
@@ -717,36 +507,56 @@ Vue.createApp({
                 })
                 .catch(error => {
                     console.error('Erro ao enviar dados para o Google Forms:', error);
-                    alert('Ocorreu um erro ao enviar os dados. Por favor, tente novamente.');
+                    this.showAlert('Ocorreu um erro ao enviar os dados. Por favor, tente novamente.');
                     throw error; // Rejeita a Promise para que o await em submitForm capture o erro
                 });
         },
         saveProductQuantities() {
             const productQuantities = this.products.map(p => ({ code: p.code, quantity: p.quantity }));
             localStorage.setItem('productQuantities', JSON.stringify(productQuantities));
-            console.log('Saved product quantities to localStorage:', productQuantities);
+            //console.log('Saved product quantities to localStorage:', productQuantities);
         },
         
         
         formatTEL(value) {
-            value = value.replace(/\D/g, '');
+            // Remove todos os caracteres não numéricos para obter apenas os dígitos.
+            let cleaned = ('' + value).replace(/\D/g, '');
 
-            if (value.length > 11) {
-                value = value.substring(0, 11);
+            // Limita o número de dígitos a 11 (DDD + 9 + número).
+            cleaned = cleaned.substring(0, 11);
+
+            // Monta a string formatada em partes, de forma progressiva.
+            const parts = [];
+
+            // Adiciona o parêntese de abertura e os dois primeiros dígitos (DDD).
+            if (cleaned.length > 0) {
+                parts.push('(' + cleaned.substring(0, 2));
             }
 
-            if (value.length > 10) {
-                value = value.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
-            } else if (value.length > 6) {
-                value = value.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3');
-            } else if (value.length > 2) {
-                value = value.replace(/^(\d{2})(\d*)$/, '($1) $2');
-            } else {
-                value = value.replace(/^(\d*)$/, '($1');
+            // Adiciona o parêntese de fechamento e o primeiro bloco de números.
+            if (cleaned.length > 2) {
+                // O tamanho do bloco central depende se é um celular (11 dígitos) ou fixo (10 dígitos).
+                const middleGroupSize = cleaned.length > 10 ? 5 : 4;
+                parts.push(') ' + cleaned.substring(2, 2 + middleGroupSize));
             }
-            return value;
+
+            // Adiciona o hífen e o segundo bloco de números.
+            if (cleaned.length > 6) {
+                const middleGroupSize = cleaned.length > 10 ? 5 : 4;
+                const startOfLastGroup = 2 + middleGroupSize;
+                
+                // Garante que o hífen só seja adicionado se houver números no último bloco.
+                if (cleaned.substring(startOfLastGroup)) {
+                   parts.push('-' + cleaned.substring(startOfLastGroup, startOfLastGroup + 4));
+                }
+            }
+
+            // Junta as partes para formar a string final.
+            return parts.join('');
         },
         async fetchTotalSignatures() {
+            this.isFetchingSignatures = true; // Inicia o carregamento do botão
+            this.showLoadingOverlay = true; // Mostra a sobreposição de carregamento
             try {
                 const response = await fetch(this.dataUrlSignatures);
                 if (!response.ok) {
@@ -758,17 +568,136 @@ Vue.createApp({
             } catch (error) {
                 console.error("Falha ao buscar o total de assinaturas:", error);
                 this.totalSignatures = 0;
+            } finally {
+                this.isFetchingSignatures = false; // Finaliza o carregamento do botão
+                this.showLoadingOverlay = false; // Esconde a sobreposição de carregamento
             }
         },
+        openSignaturesTableModal: async function() {
+            this.showLoadingOverlay = true;
+            try {
+                const response = await fetch(this.dataUrlSignatures);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! code: ${response.status}`);
+                }
+                const dataText = await response.text();
+                const lines = dataText.trim().split('\n');
+                const headers = lines[0].trim().split('\t');
+
+                console.log('Headers:', headers);
+                console.log('Lines:', lines);
+                console.log('Data Text:', dataText);
+
+                // Mapear códigos de entrada para nomes de produtos
+                this.productCodeToNameMap = {};
+                this.products.forEach(p => {
+                    let entryId;
+                    switch (p.code) {
+                        case '13620': entryId = 'entry.1129472300'; break;
+                        case '5771': entryId = 'entry.1022404271'; break;
+                        case '13558': entryId = 'entry.1243950135'; break;
+                        case '5750': entryId = 'entry.657931324'; break;
+                        case '11735': entryId = 'entry.221493385'; break;
+                        case '15997': entryId = 'entry.713249771'; break;
+                        case '5775': entryId = 'entry.1823288868'; break;
+                        case '6236': entryId = 'entry.1578335419'; break;
+                        case '5773': entryId = 'entry.1964626529'; break;
+                        case '639718184': entryId = 'entry.639718184'; break;
+                        case '5774': entryId = 'entry.2060867161'; break;
+                        case '5776': entryId = 'entry.293877698'; break;
+                        default: entryId = null; break;
+                    }
+                    if (entryId) {
+                        this.productCodeToNameMap[entryId] = p.name;
+                    }
+                });
+
+                const aggregatedSignatures = {};
+                this.allProductCodes = []; // Para coletar todos os códigos de produtos presentes
+
+                for (let i = 1; i < lines.length; i++) {
+                    const currentLine = lines[i].trim();
+                    if (currentLine === '') continue;
+
+                    const values = currentLine.split('\t');
+                    let currentSignature = {};
+
+                    headers.forEach((header, index) => {
+                        const tsvHeader = header.trim();
+                        const value = values[index] ? values[index].trim() : '';
+
+                        // Mapeamento direto dos cabeçalhos TSV para as chaves do objeto
+                        if (tsvHeader === 'Igreja') {
+                            currentSignature.igreja = value;
+                        } else if (tsvHeader === 'Distrito') {
+                            currentSignature.distrito = value;
+                        } else if (tsvHeader === 'Whatsapp') {
+                            currentSignature.whatsapp = value;
+                        } else if (tsvHeader === 'Carimbo de data/hora') {
+                            currentSignature.timestamp = value;
+                        } else { // Assume que são códigos de produto
+                            let entryId;
+                            switch (tsvHeader) {
+                                case '13620': entryId = 'entry.1129472300'; break;
+                                case '5771': entryId = 'entry.1022404271'; break;
+                                case '13558': entryId = 'entry.1243950135'; break;
+                                case '5750': entryId = 'entry.657931324'; break;
+                                case '11735': entryId = 'entry.221493385'; break;
+                                case '15997': entryId = 'entry.713249771'; break;
+                                case '5775': entryId = 'entry.1823288868'; break;
+                                case '6236': entryId = 'entry.1578335419'; break;
+                                case '5773': entryId = 'entry.1964626529'; break;
+                                case '5772': entryId = 'entry.639718184'; break;
+                                case '5774': entryId = 'entry.2060867161'; break;
+                                case '5776': entryId = 'entry.293877698'; break;
+                                default: entryId = null; break;
+                            }
+                            if (entryId) {
+                                const quantity = parseInt(value, 10) || 0;
+                                if (quantity > 0) {
+                                    currentSignature[entryId] = quantity;
+                                    if (!this.allProductCodes.includes(entryId)) {
+                                        this.allProductCodes.push(entryId);
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    const igreja = currentSignature.igreja;
+                    if (igreja) {
+                        if (!aggregatedSignatures[igreja]) {
+                            aggregatedSignatures[igreja] = {
+                                igreja: igreja,
+                                distrito: currentSignature.distrito || '',
+                                products: {},
+                                total: 0
+                            };
+                        }
+
+                        for (const entryId of this.allProductCodes) {
+                            const quantity = currentSignature[entryId] || 0;
+                            if (quantity > 0) {
+                                aggregatedSignatures[igreja].products[entryId] = (aggregatedSignatures[igreja].products[entryId] || 0) + quantity;
+                                aggregatedSignatures[igreja].total += quantity;
+                            }
+                        }
+                    }
+                }
+                this.signaturesData = Object.values(aggregatedSignatures);
+                this.showSignaturesTableModal = true;
+            } catch (error) {
+                console.error("Falha ao buscar ou processar os dados das assinaturas:", error);
+                this.showAlert("Não foi possível carregar os dados das assinaturas. Verifique o link da planilha ou a conexão com a internet.");
+            } finally {
+                this.showLoadingOverlay = false;
+            }
+        },
+        closeSignaturesTableModal: function() {
+            this.showSignaturesTableModal = false;
+            this.signaturesData = [];
+            this.allProductCodes = [];
+            this.productCodeToNameMap = {};
+        }
     }
 }).mount('#app');
-
-
-document.addEventListener('DOMContentLoaded', async () => {
-    const app = document.getElementById('app').__vue_app__;
-    if (app) {
-        // A função fetchTotalSignatures agora é um método do componente Vue
-        // e será chamada dentro do mounted() do próprio componente.
-        // Não é mais necessário chamá-la aqui.
-    }
-});
