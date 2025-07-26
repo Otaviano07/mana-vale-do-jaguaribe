@@ -486,9 +486,9 @@ Vue.createApp({
                         case '15997': entryId = 'entry.713249771'; break; // LICAO15997
                         case '5775': entryId = 'entry.1823288868'; break; // LICAO5775
                         case '6236': entryId = 'entry.1578335419'; break; // LICAO6236
-                        case '5773': entryId = 'entry.1964626529'; break; // LICAO5773
-                        case '639718184': entryId = 'entry.639718184'; break; // LICAO5772 (assuming this is the correct entry for 5772)
-                        case '5774': entryId = 'entry.2060867161'; break; // LICAO5774
+                        case '5773': entryId = 'entry.1964626529'; break;
+                        case '5772': entryId = 'entry.639718184'; break; // LICAO5772
+                        case '5774': entryId = 'entry.2060867161'; break;
                         case '5776': entryId = 'entry.293877698'; break; // LICAO5776
                         default: entryId = null; break;
                     }
@@ -565,7 +565,66 @@ Vue.createApp({
                 }
                 const dataText = await response.text();
                 const lines = dataText.trim().split('\n');
-                this.totalSignatures = lines.length > 1 ? lines.length - 1 : 0;
+                const headers = lines[0].trim().split('\t');
+
+                const tsvHeaderMapping = {
+                    'Igreja': 'igreja',
+                    'Distrito': 'distrito',
+                    'Whatsapp': 'whatsapp',
+                    'Carimbo de data/hora': 'timestamp',
+                };
+
+                // Populate tsvHeaderMapping with product entryIds
+                this.products.forEach(p => {
+                    let entryId;
+                    switch (p.code) {
+                        case '13620': entryId = 'entry.1129472300'; break;
+                        case '5771': entryId = 'entry.1022404271'; break;
+                        case '13558': entryId = 'entry.1243950135'; break;
+                        case '5750': entryId = 'entry.657931324'; break;
+                        case '11735': entryId = 'entry.221493385'; break;
+                        case '15997': entryId = 'entry.713249771'; break;
+                        case '5775': entryId = 'entry.1823288868'; break;
+                        case '6236': entryId = 'entry.1578335419'; break;
+                        case '5773': entryId = 'entry.1964626529'; break;
+                        case '5772': entryId = 'entry.639718184'; break;
+                        case '5774': entryId = 'entry.2060867161'; break;
+                        case '5776': entryId = 'entry.293877698'; break;
+                        default: entryId = null; break;
+                    }
+                    if (entryId) {
+                        tsvHeaderMapping[p.code] = entryId;
+                    }
+                });
+
+                let totalSum = 0;
+                for (let i = 1; i < lines.length; i++) {
+                    const currentLine = lines[i].trim();
+                    if (currentLine === '') continue;
+
+                    const values = currentLine.split('\t');
+                    const currentSignatureData = {};
+
+                    headers.forEach((header, index) => {
+                        const tsvHeader = header.trim();
+                        const value = values[index] ? values[index].trim() : '';
+                        const mappedKey = tsvHeaderMapping[tsvHeader];
+
+                        if (mappedKey) {
+                            currentSignatureData[mappedKey] = value;
+                        }
+                    });
+
+                    // Sum quantities for all products in the current signature
+                    for (const tsvHeader in tsvHeaderMapping) {
+                        const mappedKey = tsvHeaderMapping[tsvHeader];
+                        if (mappedKey.startsWith('entry.')) { // It's a product
+                            const quantity = parseInt(currentSignatureData[mappedKey], 10) || 0;
+                            totalSum += quantity;
+                        }
+                    }
+                }
+                this.totalSignatures = totalSum;
             } catch (error) {
                 console.error("Falha ao buscar o total de assinaturas:", error);
                 this.totalSignatures = 0;
@@ -591,6 +650,13 @@ Vue.createApp({
 
                 // Mapear códigos de entrada para nomes de produtos
                 this.productCodeToNameMap = {};
+                const tsvHeaderMapping = {
+                    'Igreja': 'igreja',
+                    'Distrito': 'distrito',
+                    'Whatsapp': 'whatsapp',
+                    'Carimbo de data/hora': 'timestamp',
+                };
+
                 this.products.forEach(p => {
                     let entryId;
                     switch (p.code) {
@@ -603,12 +669,13 @@ Vue.createApp({
                         case '5775': entryId = 'entry.1823288868'; break;
                         case '6236': entryId = 'entry.1578335419'; break;
                         case '5773': entryId = 'entry.1964626529'; break;
-                        case '639718184': entryId = 'entry.639718184'; break;
+                        case '5772': entryId = 'entry.639718184'; break;
                         case '5774': entryId = 'entry.2060867161'; break;
                         case '5776': entryId = 'entry.293877698'; break;
                         default: entryId = null; break;
                     }
                     if (entryId) {
+                        tsvHeaderMapping[p.code] = entryId; // Map TSV product code to entryId
                         this.productCodeToNameMap[entryId] = p.name;
                     }
                 });
@@ -616,68 +683,44 @@ Vue.createApp({
                 const aggregatedSignatures = {};
                 this.allProductCodes = []; // Para coletar todos os códigos de produtos presentes
 
+                // Popula allProductCodes com todos os entryIds de produtos conhecidos
+                for (const productCode in tsvHeaderMapping) {
+                    const mappedKey = tsvHeaderMapping[productCode];
+                    if (mappedKey && mappedKey.startsWith('entry.') && !this.allProductCodes.includes(mappedKey)) {
+                        this.allProductCodes.push(mappedKey);
+                    }
+                }
+
                 for (let i = 1; i < lines.length; i++) {
                     const currentLine = lines[i].trim();
                     if (currentLine === '') continue;
 
                     const values = currentLine.split('\t');
-                    let currentSignature = {};
+                    const currentSignatureData = {}; // Use a temporary object to store parsed data for the current signature
 
                     headers.forEach((header, index) => {
                         const tsvHeader = header.trim();
                         const value = values[index] ? values[index].trim() : '';
+                        const mappedKey = tsvHeaderMapping[tsvHeader];
 
-                        // Mapeamento direto dos cabeçalhos TSV para as chaves do objeto
-                        if (tsvHeader === 'Igreja') {
-                            currentSignature.igreja = value;
-                        } else if (tsvHeader === 'Distrito') {
-                            currentSignature.distrito = value;
-                        } else if (tsvHeader === 'Whatsapp') {
-                            currentSignature.whatsapp = value;
-                        } else if (tsvHeader === 'Carimbo de data/hora') {
-                            currentSignature.timestamp = value;
-                        } else { // Assume que são códigos de produto
-                            let entryId;
-                            switch (tsvHeader) {
-                                case '13620': entryId = 'entry.1129472300'; break;
-                                case '5771': entryId = 'entry.1022404271'; break;
-                                case '13558': entryId = 'entry.1243950135'; break;
-                                case '5750': entryId = 'entry.657931324'; break;
-                                case '11735': entryId = 'entry.221493385'; break;
-                                case '15997': entryId = 'entry.713249771'; break;
-                                case '5775': entryId = 'entry.1823288868'; break;
-                                case '6236': entryId = 'entry.1578335419'; break;
-                                case '5773': entryId = 'entry.1964626529'; break;
-                                case '5772': entryId = 'entry.639718184'; break;
-                                case '5774': entryId = 'entry.2060867161'; break;
-                                case '5776': entryId = 'entry.293877698'; break;
-                                default: entryId = null; break;
-                            }
-                            if (entryId) {
-                                const quantity = parseInt(value, 10) || 0;
-                                if (quantity > 0) {
-                                    currentSignature[entryId] = quantity;
-                                    if (!this.allProductCodes.includes(entryId)) {
-                                        this.allProductCodes.push(entryId);
-                                    }
-                                }
-                            }
+                        if (mappedKey) {
+                            currentSignatureData[mappedKey] = value;
                         }
                     });
 
-                    const igreja = currentSignature.igreja;
+                    const igreja = currentSignatureData.igreja;
                     if (igreja) {
                         if (!aggregatedSignatures[igreja]) {
                             aggregatedSignatures[igreja] = {
                                 igreja: igreja,
-                                distrito: currentSignature.distrito || '',
+                                distrito: currentSignatureData.distrito || '',
                                 products: {},
                                 total: 0
                             };
                         }
 
                         for (const entryId of this.allProductCodes) {
-                            const quantity = currentSignature[entryId] || 0;
+                            const quantity = parseInt(currentSignatureData[entryId], 10) || 0;
                             if (quantity > 0) {
                                 aggregatedSignatures[igreja].products[entryId] = (aggregatedSignatures[igreja].products[entryId] || 0) + quantity;
                                 aggregatedSignatures[igreja].total += quantity;
