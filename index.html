@@ -166,7 +166,6 @@
                             <tr>
                                 <th>Igreja</th>
                                 <th>Distrito</th>
-                                <th v-for="code in allProductCodes" :key="code">{{ productCodeToNameMap[code] }}</th>
                                 <th>Total</th>
                             </tr>
                         </thead>
@@ -174,7 +173,6 @@
                             <tr v-for="signature in signaturesData" :key="signature.igreja + signature.timestamp">
                                 <td>{{ signature.igreja }}</td>
                                 <td>{{ signature.distrito }}</td>
-                                <td v-for="code in allProductCodes" :key="code">{{ signature.products[code] || 0 }}</td>
                                 <td>{{ signature.total }}</td>
                             </tr>
                         </tbody>
