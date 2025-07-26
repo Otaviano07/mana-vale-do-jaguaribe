@@ -285,6 +285,7 @@ Vue.createApp({
                         link.click();
                         document.body.removeChild(link);
                     }
+                    this.resetForm(); 
                 } catch (error) {
                     console.error('Erro ao compartilhar imagem:', error);
                     this.showAlert('Erro ao compartilhar imagem.');
