@@ -141,6 +141,7 @@ Vue.createApp({
             this.stopCamera();
             this.capturedImage = null;
             this.finalShareImage = null;
+            this.fetchTotalSignatures();
         },
         async startCamera() {
             console.log('startCamera called. this.$refs.video:', this.$refs.video);
@@ -275,6 +276,7 @@ Vue.createApp({
                             files: [file],
                         });
                         this.showAlert('Imagem compartilhada com sucesso!');
+                        this.fetchTotalSignatures();
                     } else {
                         this.showAlert('Seu navegador não suporta o compartilhamento nativo. Você pode baixar a imagem e compartilhar manualmente.');
                         // Fallback for browsers that don't support Web Share API
@@ -478,18 +480,18 @@ Vue.createApp({
                 if (product.quantity > 0) {
                     let entryId;
                     switch (product.code) {
-                        case '13620': entryId = 'entry.1129472300'; break; // LICAO13620
-                        case '5771': entryId = 'entry.1022404271'; break;  // LICAO5771
-                        case '13558': entryId = 'entry.1243950135'; break; // LICAO13558
-                        case '5750': entryId = 'entry.657931324'; break;  // LICAO5750
-                        case '11735': entryId = 'entry.221493385'; break;  // LICAO11735
-                        case '15997': entryId = 'entry.713249771'; break; // LICAO15997
-                        case '5775': entryId = 'entry.1823288868'; break; // LICAO5775
-                        case '6236': entryId = 'entry.1578335419'; break; // LICAO6236
+                        case '13620': entryId = 'entry.1129472300'; break;
+                        case '5771': entryId = 'entry.1022404271'; break;
+                        case '13558': entryId = 'entry.1243950135'; break;
+                        case '5750': entryId = 'entry.657931324'; break;
+                        case '11735': entryId = 'entry.221493385'; break;
+                        case '15997': entryId = 'entry.713249771'; break;
+                        case '5775': entryId = 'entry.1823288868'; break;
+                        case '6236': entryId = 'entry.1578335419'; break;
                         case '5773': entryId = 'entry.1964626529'; break;
-                        case '5772': entryId = 'entry.639718184'; break; // LICAO5772
+                        case '5772': entryId = 'entry.639718184'; break;
                         case '5774': entryId = 'entry.2060867161'; break;
-                        case '5776': entryId = 'entry.293877698'; break; // LICAO5776
+                        case '5776': entryId = 'entry.293877698'; break;
                         default: entryId = null; break;
                     }
                     if (entryId) {
