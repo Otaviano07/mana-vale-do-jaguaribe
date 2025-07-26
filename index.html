@@ -21,12 +21,14 @@
                 <h2>MANÁ 2025</h2>
                 <div class="assinometro">
                     <h3>ASSINÔMETRO</h3>
-                    <button class="refresh-btn" @click="fetchTotalSignatures" :disabled="isFetchingSignatures">
-                        <i class="material-icons" :class="{ 'rotating': isFetchingSignatures }">refresh</i>
-                    </button>
-                    <button class="signatures-table-btn" @click="openSignaturesTableModal">
-                        <i class="material-icons">list_alt</i>
-                    </button>
+                    <div class="assinometro-buttons">
+                        <button class="refresh-btn" @click="fetchTotalSignatures" :disabled="isFetchingSignatures">
+                            <i class="material-icons" :class="{ 'rotating': isFetchingSignatures }">refresh</i>
+                        </button>
+                        <button class="signatures-table-btn" @click="openSignaturesTableModal">
+                            <i class="material-icons">list_alt</i>
+                        </button>
+                    </div>
                     <div class="meta-info">
                         <span>Meta do Distrito: <strong>526</strong></span>
                     </div>
