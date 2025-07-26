@@ -514,12 +514,16 @@ body {
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
-    width: 100%;
+    width: 90%; /* Adjust width for better fit */
     max-width: 300px;
-    margin: 30px auto 0;
-    display: block;
+    position: fixed; /* Fixed position */
+    bottom: 20px; /* 20px from the bottom */
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%); /* Adjust for centering */
+    z-index: 1000; /* Ensure it's above other content */
     text-transform: uppercase;
     letter-spacing: 1px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 .submit-btn:hover {
@@ -683,21 +687,9 @@ body {
     }
 
     .submit-btn {
-        background: linear-gradient(135deg, #c8860d 0%, #1a365d 100%);
-        color: white;
-        border: none;
-        padding: 15px 40px;
-        border-radius: 25px;
-        font-size: 1.2em;
-        font-weight: bold;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        width: 100%;
-        max-width: 300px;
-        margin: 30px auto 0;
-        display: block;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+        padding: 12px 30px;
+        font-size: 1.1em;
+        /* Removed conflicting margin and display properties */
     }
 
     .submit-btn:hover {
