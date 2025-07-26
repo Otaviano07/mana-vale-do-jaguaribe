@@ -301,7 +301,8 @@ Vue.createApp({
         },
         async fetchData() {
             try {
-                const response = await fetch(this.dataUrlProducts);
+                const urlWithCacheBuster = `${this.dataUrlProducts}&_t=${new Date().getTime()}`;
+                const response = await fetch(urlWithCacheBuster);
                 if (!response.ok) {
                     throw new Error(`HTTP error! code: ${response.status}`);
                 }
@@ -361,7 +362,8 @@ Vue.createApp({
         },
         async fetchChurchData() {
             try {
-                const response = await fetch(this.dataUrlChurch);
+                const urlWithCacheBuster = `${this.dataUrlChurch}&_t=${new Date().getTime()}`;
+                const response = await fetch(urlWithCacheBuster);
                 if (!response.ok) {
                     throw new Error(`HTTP error! code: ${response.status}`);
                 }
@@ -457,6 +459,7 @@ Vue.createApp({
             };
             localStorage.removeItem('formData');
             localStorage.removeItem('productQuantities');
+            this.formErrors = { nome: '', whatsapp: '', igreja: '' }; // Limpa os erros do formulário
         },
         sendToGoogleForm() {
             const baseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSc5Q5NN8K9SraLjdnu0y5QLeiIHhazrNOPARRRBgtTSZrxDDQ/formResponse'; // Endpoint de submissão
@@ -483,7 +486,7 @@ Vue.createApp({
                         case '13620': entryId = 'entry.1129472300'; break;
                         case '5771': entryId = 'entry.1022404271'; break;
                         case '13558': entryId = 'entry.1243950135'; break;
-                        case '5750': entryId = 'entry.657931324'; break;
+                        case '5770': entryId = 'entry.657931324'; break;
                         case '11735': entryId = 'entry.221493385'; break;
                         case '15997': entryId = 'entry.713249771'; break;
                         case '5775': entryId = 'entry.1823288868'; break;
@@ -583,7 +586,7 @@ Vue.createApp({
                         case '13620': entryId = 'entry.1129472300'; break;
                         case '5771': entryId = 'entry.1022404271'; break;
                         case '13558': entryId = 'entry.1243950135'; break;
-                        case '5750': entryId = 'entry.657931324'; break;
+                        case '5770': entryId = 'entry.657931324'; break;
                         case '11735': entryId = 'entry.221493385'; break;
                         case '15997': entryId = 'entry.713249771'; break;
                         case '5775': entryId = 'entry.1823288868'; break;
@@ -665,7 +668,7 @@ Vue.createApp({
                         case '13620': entryId = 'entry.1129472300'; break;
                         case '5771': entryId = 'entry.1022404271'; break;
                         case '13558': entryId = 'entry.1243950135'; break;
-                        case '5750': entryId = 'entry.657931324'; break;
+                        case '5770': entryId = 'entry.657931324'; break;
                         case '11735': entryId = 'entry.221493385'; break;
                         case '15997': entryId = 'entry.713249771'; break;
                         case '5775': entryId = 'entry.1823288868'; break;

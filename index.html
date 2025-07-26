@@ -97,7 +97,10 @@
                 </div>
         </div>
 
-        <button class="submit-btn" @click="submitForm">salvar Assinatura</button>
+        <div class="form-actions">
+            <button class="submit-btn" @click="submitForm">salvar Assinatura</button>
+            <button class="reset-btn" @click="resetForm">Limpar Formulário</button>
+        </div>
 
         <div v-if="showImageModal" class="image-modal-overlay" @click.self="closeImageModal">
             <div class="image-modal-content">

@@ -504,26 +504,44 @@ body {
     min-height: 1em;
 }
 
-.submit-btn {
+.form-actions {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    gap: 10px; /* Espaçamento entre os botões */
+    width: 90%;
+    max-width: 620px; /* Ajuste conforme necessário para acomodar ambos os botões */
+    justify-content: center;
+}
+
+.submit-btn,
+.reset-btn {
     background: linear-gradient(135deg, #c8860d 0%, #1a365d 100%);
     color: white;
     border: none;
-    padding: 15px 40px;
+    padding: 15px 20px; /* Ajuste o padding para caberem lado a lado */
     border-radius: 25px;
     font-size: 1.2em;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
-    width: 90%; /* Adjust width for better fit */
-    max-width: 300px;
-    position: fixed; /* Fixed position */
-    bottom: 20px; /* 20px from the bottom */
-    left: 50%; /* Center horizontally */
-    transform: translateX(-50%); /* Adjust for centering */
-    z-index: 1000; /* Ensure it's above other content */
+    flex-grow: 1; /* Permite que os botões cresçam para preencher o espaço */
     text-transform: uppercase;
     letter-spacing: 1px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.reset-btn {
+    background: linear-gradient(135deg, #acacac 0%, #777777 100%); /* Cor diferente para o botão de reset */
+}
+
+.submit-btn:hover,
+.reset-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(200, 134, 13, 0.3);
 }
 
 .submit-btn:hover {
@@ -687,14 +705,20 @@ body {
     }
 
     .submit-btn {
-        padding: 12px 30px;
+        padding: 12px 20px;
         font-size: 1.1em;
-        /* Removed conflicting margin and display properties */
     }
 
-    .submit-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(200, 134, 13, 0.3);
+    .reset-btn {
+        padding: 12px 20px;
+        font-size: 1.1em;
+    }
+
+    .form-actions {
+        width: 95%; /* Adjust width for smaller screens */
+        max-width: unset; /* Remove max-width constraint */
+        flex-direction: column; /* Stack buttons vertically */
+        gap: 10px;
     }
 
     .note {
