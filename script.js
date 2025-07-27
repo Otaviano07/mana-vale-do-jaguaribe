@@ -3,9 +3,9 @@ Vue.createApp({
         return {
             products: [],
             searchQuery: '',
-            dataUrlProducts: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSGocezfQekt9igT7GkM-by02hnL0ELUqtM-m3AySn1vqJ7gUdg7dJlz2nZpereA_le8_amweck88nr/pub?gid=0&single=true&output=tsv',
-            dataUrlChurch: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSGocezfQekt9igT7GkM-by02hnL0ELUqtM-m3AySn1vqJ7gUdg7dJlz2nZpereA_le8_amweck88nr/pub?gid=1639594837&single=true&output=tsv',
-            dataUrlSignatures: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSGocezfQekt9igT7GkM-by02hnL0ELUqtM-m3AySn1vqJ7gUdg7dJlz2nZpereA_le8_amweck88nr/pub?gid=901102443&single=true&output=tsv',
+            dataUrlProducts: '/api/produtos',
+            dataUrlChurch: '/api/igrejas',
+            dataUrlSignatures: '/api/assinaturas',
             churches: [],
             formData: {
                 nome: '',
@@ -314,8 +314,7 @@ Vue.createApp({
         },
         async fetchData() {
             try {
-                const urlWithCacheBuster = `${this.dataUrlProducts}&_t=${new Date().getTime()}`;
-                const response = await fetch(urlWithCacheBuster);
+                const response = await fetch(this.dataUrlProducts);
                 if (!response.ok) {
                     throw new Error(`HTTP error! code: ${response.status}`);
                 }
@@ -375,8 +374,7 @@ Vue.createApp({
         },
         async fetchChurchData() {
             try {
-                const urlWithCacheBuster = `${this.dataUrlChurch}&_t=${new Date().getTime()}`;
-                const response = await fetch(urlWithCacheBuster);
+                const response = await fetch(this.dataUrlChurch);
                 if (!response.ok) {
                     throw new Error(`HTTP error! code: ${response.status}`);
                 }
@@ -497,7 +495,7 @@ Vue.createApp({
             this.formErrors = { nome: '', whatsapp: '', igreja: '' }; // Limpa os erros do formulário
         },
         sendToGoogleForm() {
-            const baseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSc5Q5NN8K9SraLjdnu0y5QLeiIHhazrNOPARRRBgtTSZrxDDQ/formResponse'; // Endpoint de submissão
+            const baseUrl = '/api/enviar'; // Endpoint de submissão
             let formData = new FormData();
 
             const formFields = {
@@ -540,8 +538,7 @@ Vue.createApp({
 
             return fetch(baseUrl, {
                 method: 'POST',
-                body: formData,
-                mode: 'no-cors' // Importante para evitar erros de CORS com o Google Forms
+                body: formData
             })
                 .then(() => {
                     console.log('Dados enviados para o Google Forms com sucesso (em segundo plano).');

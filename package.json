@@ -1,0 +1,23 @@
+{
+  "name": "mana",
+  "version": "1.0.0",
+  "main": "constants.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Otaviano07/mana-vale-do-jaguaribe.git"
+  },
+  "author": "Otaviano Rodrigues da Silva",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Otaviano07/mana-vale-do-jaguaribe/issues"
+  },
+  "homepage": "https://github.com/Otaviano07/mana-vale-do-jaguaribe#readme",
+  "description": "",
+  "dependencies": {
+    "node-fetch": "^3.3.2",
+    "formidable": "^3.5.1"
+  }
+}
