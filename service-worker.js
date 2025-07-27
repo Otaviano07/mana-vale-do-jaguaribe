@@ -9,14 +9,10 @@ const urlsToCache = [
     '/img/folder_sem.jpg',
     '/img/folder.jpg',
     '/img/moldura.png',
-    '/fonts/Roboto_Mono/RobotoMono-Regular.ttf',
-    '/fonts/Roboto_Mono/RobotoMono-Bold.ttf',
+    '/fonts/Roboto_Mono/static/RobotoMono-Regular.ttf',
+    '/fonts/Roboto_Mono/static/RobotoMono-Bold.ttf',
     '/fonts/Roboto_Mono/RobotoMono-Italic-VariableFont_wght.ttf',
-    '/fonts/Roboto_Mono/RobotoMono-VariableFont_wght.ttf',
-    'https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
-    'https://fonts.googleapis.com/icon?family=Material+Icons',
-    'https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap'
+    '/fonts/Roboto_Mono/RobotoMono-VariableFont_wght.ttf'
 ];
 
 self.addEventListener('install', event => {
@@ -24,7 +20,14 @@ self.addEventListener('install', event => {
         caches.open(CACHE_NAME)
             .then(cache => {
                 console.log('Opened cache');
-                return cache.addAll(urlsToCache);
+                // Tenta adicionar cada arquivo individualmente e loga o erro específico
+                return Promise.all(
+                    urlsToCache.map(url =>
+                        cache.add(url).catch(error => {
+                            console.error(`Erro ao adicionar ${url} ao cache:`, error);
+                        })
+                    )
+                );
             })
     );
 });
