@@ -20,8 +20,7 @@ Vue.createApp({
             capturedImage: null,
             finalShareImage: null,
             cameraStream: null,
-            states: [],
-            cities: [],
+            
             showCustomAlert: false,
             customAlertMessage: '',
             formErrors: { nome: '', whatsapp: '', igreja: '' },
@@ -71,7 +70,7 @@ Vue.createApp({
         },
     },
     async mounted() {
-        this.showImageModal = false; // Ensure modal is hidden on mount
+        this.showImageModal = false;
 
         const savedFormData = localStorage.getItem('formData');
         if (savedFormData) {
@@ -81,14 +80,7 @@ Vue.createApp({
         this.formData.distrito = 'VALE DO JAGUARIBE';
         await this.fetchData();
         this.fetchChurchData();
-        await this.fetchStates();
         await this.fetchTotalSignatures();
-        if (this.formData.uf) {
-            const selectedState = this.states.find(state => state.sigla === this.formData.uf);
-            if (selectedState) {
-                this.fetchCities(selectedState.id);
-            }
-        }
     },
     methods: {
         openImageModal(imageSrc) {
@@ -98,7 +90,7 @@ Vue.createApp({
         closeImageModal() {
             this.showImageModal = false;
             this.currentModalImage = '';
-            console.log('Closing image modal');
+            
         },
         showAlert(message) {
             this.customAlertMessage = message;
@@ -157,12 +149,12 @@ Vue.createApp({
             this.fetchTotalSignatures();
         },
         async startCamera() {
-            console.log('startCamera called. this.$refs.video:', this.$refs.video);
+            
             try {
                 this.cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
                 this.$refs.video.srcObject = this.cameraStream;
             } catch (err) {
-                console.error('Erro ao acessar a câmera:', err);
+                
                 this.showAlert('Não foi possível acessar a câmera. Verifique as permissões.');
             }
         },
@@ -190,89 +182,72 @@ Vue.createApp({
             canvas.width = 1080;
             canvas.height = 1920;
 
-            // Calcular as proporções para o comportamento 'cover'
             const videoRatio = video.videoWidth / video.videoHeight;
             const canvasRatio = canvas.width / canvas.height;
 
-            let sx, sy, sWidth, sHeight; // Source (video)
+            let sx, sy, sWidth, sHeight;
 
             if (videoRatio > canvasRatio) {
-                // O vídeo é mais largo que o canvas, cortar as laterais do vídeo
                 sHeight = video.videoHeight;
                 sWidth = sHeight * canvasRatio;
                 sx = (video.videoWidth - sWidth) / 2;
                 sy = 0;
             } else {
-                // O vídeo é mais alto que o canvas, cortar a parte superior/inferior do vídeo
                 sWidth = video.videoWidth;
                 sHeight = sWidth / canvasRatio;
                 sx = 0;
                 sy = (video.videoHeight - sHeight) / 2;
             }
 
-            // Desenhar a parte calculada do vídeo para preencher o canvas
             context.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, canvas.width, canvas.height);
 
             this.capturedImage = canvas.toDataURL('image/png');
-            this.drawAssinometroOnImage(); // atualiza finalShareImage
-            this.stopCamera(); // desliga a câmera
+            this.drawAssinometroOnImage();
+            this.stopCamera();
         },
         async drawAssinometroOnImage() {
             const canvas = this.$refs.canvas;
             const context = canvas.getContext('2d');
 
-            // 1. Cria objetos de imagem para a foto capturada e para o template.
             const capturedPhoto = new Image();
             const templateImage = new Image();
 
-            // Lidar com o carregamento das duas imagens de forma assíncrona.
             const loadImages = Promise.all([
                 new Promise(resolve => {
                     capturedPhoto.onload = resolve;
-                    capturedPhoto.src = this.capturedImage; // Fonte da imagem capturada
+                    capturedPhoto.src = this.capturedImage;
                 }),
                 new Promise(resolve => {
                     templateImage.onload = resolve;
-                    templateImage.src = "img/moldura.png"; // Caminho para o seu template
+                    templateImage.src = "img/moldura.png";
                 })
             ]);
 
-            // 2. Após ambas as imagens carregarem, desenha no canvas.
             loadImages.then(() => {
-                // Garante que o canvas está limpo.
                 context.clearRect(0, 0, canvas.width, canvas.height);
 
-                // Passo A: Desenha a foto capturada para preencher todo o canvas.
-                // A função capturePhoto() já garante que a foto cubra 1080x1920.
                 context.drawImage(capturedPhoto, 0, 0, canvas.width, canvas.height);
 
-                // Passo B: Desenha a imagem do template por cima da foto.
-                // A área preta (se for transparente no seu PNG) revelará a foto abaixo.
                 context.drawImage(templateImage, 0, 0, canvas.width, canvas.height);
 
                 const assinometroText = this.totalSignatures.toString().padStart(4, '0');
                 const labelText = 'Nº ASSINATURA: ';
 
-                // Example positions and styles - YOU WILL LIKELY NEED TO ADJUST THESE
-                // These values are placeholders and need to be fine-tuned based on your actual image and desired layout.
                 const centerX = canvas.width / 2 + 300;
                 const centerY = canvas.height / 2 + 550;
 
-                // Assinometro Number
-                context.font = 'bold 60px Arial'; // Adjust font size and family
-                context.fillStyle = '#c8860d'; // Gold color
+                context.font = 'bold 60px Arial';
+                context.fillStyle = '#c8860d';
                 context.textAlign = 'center';
-                context.fillText(assinometroText, centerX, centerY); // Adjust Y position
+                context.fillText(assinometroText, centerX, centerY);
 
-                // Assinometro Label
-                context.font = 'bold 40px Arial'; // Adjust font size and family
-                context.fillStyle = 'white'; // White color
-                context.fillText(labelText, centerX-240, centerY-7); // Adjust Y position
+                context.font = 'bold 40px Arial';
+                context.fillStyle = 'white';
+                context.fillText(labelText, centerX-240, centerY-7);
 
-                // Passo C: Define a imagem final para compartilhamento.
                 this.finalShareImage = canvas.toDataURL('image/png');
             }).catch(error => {
-                console.error("Erro ao carregar as imagens:", error);
+                
                 this.showAlert("Houve um problema ao carregar a imagem ou o template.");
             });
         },
@@ -292,7 +267,6 @@ Vue.createApp({
                         this.fetchTotalSignatures();
                     } else {
                         this.showAlert('Seu navegador não suporta o compartilhamento nativo. Você pode baixar a imagem e compartilhar manualmente.');
-                        // Fallback for browsers that don't support Web Share API
                         const link = document.createElement('a');
                         link.href = this.finalShareImage;
                         link.download = 'assinometro_mana.png';
@@ -302,7 +276,7 @@ Vue.createApp({
                     }
                     this.resetForm(); 
                 } catch (error) {
-                    console.error('Erro ao compartilhar imagem:', error);
+                    
                     this.showAlert('Erro ao compartilhar imagem.');
                 }
             }
@@ -328,7 +302,7 @@ Vue.createApp({
                     if (currentLine === '') continue;
 
                     const values = currentLine.split('\t');
-                    const product = { quantity: 0 }; // Initialize quantity to 0
+                    const product = { quantity: 0 };
 
                     headers.forEach((header, index) => {
                         const key = header.trim();
@@ -337,7 +311,6 @@ Vue.createApp({
                         if (key === 'price') {
                             product[key] = parseFloat(value.replace(',', '.'));
                         } else if (key === 'quantity') {
-                            // If 'quantity' exists in TSV, use it, otherwise it's already 0
                             product[key] = parseInt(value, 10);
                         } else {
                             product[key] = value;
@@ -346,29 +319,25 @@ Vue.createApp({
                     productsData.push(product);
                 }
 
-                // Apply saved quantities to productsData before assigning to this.products
                 const savedProductQuantities = localStorage.getItem('productQuantities');
                 if (savedProductQuantities) {
                     const parsedQuantities = JSON.parse(savedProductQuantities);
 
-                    // Create a new array with updated quantities
                     const updatedProductsData = productsData.map(product => {
                         const savedItem = parsedQuantities.find(item => item.code === product.code);
                         if (savedItem) {
-                            //console.log(`Updating product ${product.code} quantity from ${product.quantity} to ${savedItem.quantity}`);
                             return { ...product, quantity: savedItem.quantity };
                         }
                         return product;
                     });
                     this.products = updatedProductsData;
-                    //console.log('Products after applying saved quantities:', this.products);
                 } else {
                     this.products = productsData;
-                    console.log('No saved product quantities found. Initial products:', this.products);
+                    
                 }
 
             } catch (error) {
-                console.error("Falha ao buscar ou processar o arquivo TSV:", error);
+                
                 this.showAlert("Não foi possível carregar os dados. Verifique o link da planilha ou a conexão com a internet.");
             }
         },
@@ -378,45 +347,14 @@ Vue.createApp({
                 if (!response.ok) {
                     throw new Error(`HTTP error! code: ${response.status}`);
                 }
-                const dataText = await response.text();
-                console.log("Dados brutos da igreja (dataText):", dataText);
-                const lines = dataText.trim().split('\n');
-                console.log("Linhas processadas da igreja:", lines);
+                const dataText = await response.text();                const lines = dataText.trim().split('\n');
                 this.churches = lines.slice(1).map(line => line.trim()).filter(line => line !== '');
-                console.log("Igrejas carregadas (this.churches):", this.churches);
             } catch (error) {
                 console.error("Falha ao buscar ou processar os dados da igreja:", error);
                 this.showAlert("Não foi possível carregar os dados das igrejas. Verifique o link da planilha ou a conexão com a internet.");
             }
         },
-        async fetchStates() {
-            try {
-                const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! code: ${response.status}`);
-                }
-                this.states = await response.json();
-            } catch (error) {
-                console.error("Falha ao buscar os estados:", error);
-                this.showAlert("Não foi possível carregar os estados. Verifique sua conexão.");
-            }
-        },
-        async fetchCities(stateId) {
-            if (!stateId) {
-                this.cities = [];
-                return;
-            }
-            try {
-                const response = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${stateId}/municipios?orderBy=nome`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! code: ${response.status}`);
-                }
-                this.cities = await response.json();
-            } catch (error) {
-                console.error("Falha ao buscar as cidades:", error);
-                this.showAlert("Não foi possível carregar as cidades. Verifique sua conexão.");
-            }
-        },
+        
         decreaseQuantity(code) {
             const product = this.products.find(p => p.code === code);
             if (product && product.quantity > 0) {
@@ -452,32 +390,35 @@ Vue.createApp({
                 this.showAlert('Por favor, selecione pelo menos um produto.');
                 return;
             }
-            this.showLoadingOverlay = true; // Mostra o loading
-            console.log('Loading overlay set to true.');
+            this.showLoadingOverlay = true;
+            console.log('submitForm: Iniciando submissão do formulário.');
 
             try {
+                console.log('submitForm: Chamando sendToGoogleForm().');
                 await this.sendToGoogleForm();
+                console.log('submitForm: sendToGoogleForm() concluído.');
 
-                // Adiciona um tempo de loading de 5 segundos
+                console.log('submitForm: Aguardando 2 segundos...');
                 await new Promise(resolve => setTimeout(resolve, 2000));
-                console.log('5 seconds delay finished.');
+                console.log('submitForm: Atraso de 2 segundos finalizado.');
                 
-                this.showAlert('Formulário enviado com sucesso!'); // Mensagem de confirmação
+                this.showAlert('Formulário enviado com sucesso!');
                 this.showLoadingOverlay = false;
-                // Pergunta ao usuário se deseja compartilhar a conquista
+                console.log('submitForm: Perguntando sobre compartilhamento.');
                 if (await this.showConfirm('Deseja tirar uma foto e compartilhar sua conquista?')) {
                     this.totalSignatures++;
                     this.openPhotoShareModal(); 
+                    console.log('submitForm: Abrindo modal de compartilhamento de foto.');
                 } else {
                     this.resetForm(); 
+                    console.log('submitForm: Resetando formulário.');
                 }
             } catch (error) {
-                console.error('Erro no submitForm:', error);
-                // A mensagem de erro já é tratada em sendToGoogleForm
+                console.error('submitForm: Erro durante a submissão:', error);
+                this.showAlert('Ocorreu um erro ao enviar os dados. Por favor, tente novamente.');
             } finally {
-                // Esconde o loading
                 this.showLoadingOverlay = false;
-                console.log('Loading overlay set to false in finally block.');
+                console.log('submitForm: Loading overlay definido como false no bloco finally.');
             }
         },
         resetForm() {
@@ -492,20 +433,22 @@ Vue.createApp({
             };
             localStorage.removeItem('formData');
             localStorage.removeItem('productQuantities');
-            this.formErrors = { nome: '', whatsapp: '', igreja: '' }; // Limpa os erros do formulário
+            this.formErrors = { nome: '', whatsapp: '', igreja: '' };
         },
         sendToGoogleForm() {
-            const baseUrl = '/api/enviar'; // Endpoint de submissão
+            console.log('sendToGoogleForm: Preparando para enviar dados.');
+            const baseUrl = '/api/enviar';
             let formData = new FormData();
 
             const formFields = {
-                'entry.732388561': this.formData.nome, // NOME
-                'entry.333865204': this.formData.igreja, // IGREJA
-                'entry.529682514': this.formData.distrito, // DISTRITO
-                'entry.964340878': this.formData.whatsapp, // WHATSAPP
+                'entry.732388561': this.formData.nome,
+                'entry.333865204': this.formData.igreja,
+                'entry.529682514': this.formData.distrito,
+                'entry.964340878': this.formData.whatsapp,
             };
 
-            // Adiciona os dados pessoais ao FormData
+            console.log('sendToGoogleForm: Campos do formulário a serem enviados:', formFields);
+
             for (const key in formFields) {
                 if (formFields[key]) {
                     formData.append(key, formFields[key]);
@@ -532,145 +475,65 @@ Vue.createApp({
                     }
                     if (entryId) {
                         formData.append(entryId, product.quantity);
+                        console.log(`sendToGoogleForm: Adicionando produto ${product.name} (Cód. ${product.code}) com quantidade ${product.quantity} para ${entryId}`);
                     }
                 }
             });
 
+            console.log('sendToGoogleForm: Enviando requisição para:', baseUrl);
             return fetch(baseUrl, {
                 method: 'POST',
                 body: formData
             })
-                .then(() => {
-                    console.log('Dados enviados para o Google Forms com sucesso (em segundo plano).');
+                .then(response => {
+                    console.log('sendToGoogleForm: Resposta do servidor recebida.', response);
+                    if (!response.ok) {
+                        console.error('sendToGoogleForm: Erro na resposta do servidor:', response.status, response.statusText);
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response;
                 })
                 .catch(error => {
-                    console.error('Erro ao enviar dados para o Google Forms:', error);
+                    console.error('sendToGoogleForm: Erro ao enviar dados para o Google Forms:', error);
                     this.showAlert('Ocorreu um erro ao enviar os dados. Por favor, tente novamente.');
-                    throw error; // Rejeita a Promise para que o await em submitForm capture o erro
+                    throw error;
                 });
         },
         saveProductQuantities() {
             const productQuantities = this.products.map(p => ({ code: p.code, quantity: p.quantity }));
             localStorage.setItem('productQuantities', JSON.stringify(productQuantities));
-            //console.log('Saved product quantities to localStorage:', productQuantities);
         },
         
         
         formatTEL(value) {
-            // Remove todos os caracteres não numéricos para obter apenas os dígitos.
             let cleaned = ('' + value).replace(/\D/g, '');
 
-            // Limita o número de dígitos a 11 (DDD + 9 + número).
             cleaned = cleaned.substring(0, 11);
 
-            // Monta a string formatada em partes, de forma progressiva.
             const parts = [];
 
-            // Adiciona o parêntese de abertura e os dois primeiros dígitos (DDD).
             if (cleaned.length > 0) {
                 parts.push('(' + cleaned.substring(0, 2));
             }
 
-            // Adiciona o parêntese de fechamento e o primeiro bloco de números.
             if (cleaned.length > 2) {
-                // O tamanho do bloco central depende se é um celular (11 dígitos) ou fixo (10 dígitos).
                 const middleGroupSize = cleaned.length > 10 ? 5 : 4;
                 parts.push(') ' + cleaned.substring(2, 2 + middleGroupSize));
             }
 
-            // Adiciona o hífen e o segundo bloco de números.
             if (cleaned.length > 6) {
                 const middleGroupSize = cleaned.length > 10 ? 5 : 4;
                 const startOfLastGroup = 2 + middleGroupSize;
                 
-                // Garante que o hífen só seja adicionado se houver números no último bloco.
                 if (cleaned.substring(startOfLastGroup)) {
                    parts.push('-' + cleaned.substring(startOfLastGroup, startOfLastGroup + 4));
                 }
             }
 
-            // Junta as partes para formar a string final.
             return parts.join('');
         },
         async fetchTotalSignatures() {
-            this.isFetchingSignatures = true; // Inicia o carregamento do botão
-            this.showLoadingOverlay = true; // Mostra a sobreposição de carregamento
-            try {
-                const response = await fetch(this.dataUrlSignatures);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! code: ${response.status}`);
-                }
-                const dataText = await response.text();
-                const lines = dataText.trim().split('\n');
-                const headers = lines[0].trim().split('\t');
-
-                const tsvHeaderMapping = {
-                    'Igreja': 'igreja',
-                    'Distrito': 'distrito',
-                    'Whatsapp': 'whatsapp',
-                    'Carimbo de data/hora': 'timestamp',
-                };
-
-                // Populate tsvHeaderMapping with product entryIds
-                this.products.forEach(p => {
-                    let entryId;
-                    switch (p.code) {
-                        case '13620': entryId = 'entry.1129472300'; break;
-                        case '5771': entryId = 'entry.1022404271'; break;
-                        case '13558': entryId = 'entry.1243950135'; break;
-                        case '5770': entryId = 'entry.657931324'; break;
-                        case '11735': entryId = 'entry.221493385'; break;
-                        case '15997': entryId = 'entry.713249771'; break;
-                        case '5775': entryId = 'entry.1823288868'; break;
-                        case '6236': entryId = 'entry.1578335419'; break;
-                        case '5773': entryId = 'entry.1964626529'; break;
-                        case '5772': entryId = 'entry.639718184'; break;
-                        case '5774': entryId = 'entry.2060867161'; break;
-                        case '5776': entryId = 'entry.293877698'; break;
-                        default: entryId = null; break;
-                    }
-                    if (entryId) {
-                        tsvHeaderMapping[p.code] = entryId;
-                    }
-                });
-
-                let totalSum = 0;
-                for (let i = 1; i < lines.length; i++) {
-                    const currentLine = lines[i].trim();
-                    if (currentLine === '') continue;
-
-                    const values = currentLine.split('\t');
-                    const currentSignatureData = {};
-
-                    headers.forEach((header, index) => {
-                        const tsvHeader = header.trim();
-                        const value = values[index] ? values[index].trim() : '';
-                        const mappedKey = tsvHeaderMapping[tsvHeader];
-
-                        if (mappedKey) {
-                            currentSignatureData[mappedKey] = value;
-                        }
-                    });
-
-                    // Sum quantities for all products in the current signature
-                    for (const tsvHeader in tsvHeaderMapping) {
-                        const mappedKey = tsvHeaderMapping[tsvHeader];
-                        if (mappedKey.startsWith('entry.')) { // It's a product
-                            const quantity = parseInt(currentSignatureData[mappedKey], 10) || 0;
-                            totalSum += quantity;
-                        }
-                    }
-                }
-                this.totalSignatures = totalSum;
-            } catch (error) {
-                console.error("Falha ao buscar o total de assinaturas:", error);
-                this.totalSignatures = 0;
-            } finally {
-                this.isFetchingSignatures = false; // Finaliza o carregamento do botão
-                this.showLoadingOverlay = false; // Esconde a sobreposição de carregamento
-            }
-        },
-        openSignaturesTableModal: async function() {
+            this.isFetchingSignatures = true;
             this.showLoadingOverlay = true;
             try {
                 const response = await fetch(this.dataUrlSignatures);
@@ -681,18 +544,9 @@ Vue.createApp({
                 const lines = dataText.trim().split('\n');
                 const headers = lines[0].trim().split('\t');
 
-                console.log('Headers:', headers);
-                console.log('Lines:', lines);
-                console.log('Data Text:', dataText);
-
-                // Mapear códigos de entrada para nomes de produtos
                 this.productCodeToNameMap = {};
-                const tsvHeaderMapping = {
-                    'Igreja': 'igreja',
-                    'Distrito': 'distrito',
-                    'Whatsapp': 'whatsapp',
-                    'Carimbo de data/hora': 'timestamp',
-                };
+                this.allProductCodes = [];
+                const productCodeToEntryIdMap = {};
 
                 this.products.forEach(p => {
                     let entryId;
@@ -712,36 +566,37 @@ Vue.createApp({
                         default: entryId = null; break;
                     }
                     if (entryId) {
-                        tsvHeaderMapping[p.code] = entryId; // Map TSV product code to entryId
                         this.productCodeToNameMap[entryId] = p.name;
+                        this.allProductCodes.push(entryId);
+                        productCodeToEntryIdMap[p.code] = entryId;
                     }
                 });
 
                 const aggregatedSignatures = {};
-                this.allProductCodes = []; // Para coletar todos os códigos de produtos presentes
-
-                // Popula allProductCodes com todos os entryIds de produtos conhecidos
-                for (const productCode in tsvHeaderMapping) {
-                    const mappedKey = tsvHeaderMapping[productCode];
-                    if (mappedKey && mappedKey.startsWith('entry.') && !this.allProductCodes.includes(mappedKey)) {
-                        this.allProductCodes.push(mappedKey);
-                    }
-                }
+                let totalSum = 0;
 
                 for (let i = 1; i < lines.length; i++) {
                     const currentLine = lines[i].trim();
                     if (currentLine === '') continue;
 
                     const values = currentLine.split('\t');
-                    const currentSignatureData = {}; // Use a temporary object to store parsed data for the current signature
+                    const currentSignatureData = {};
 
                     headers.forEach((header, index) => {
                         const tsvHeader = header.trim();
                         const value = values[index] ? values[index].trim() : '';
-                        const mappedKey = tsvHeaderMapping[tsvHeader];
 
-                        if (mappedKey) {
-                            currentSignatureData[mappedKey] = value;
+                        if (tsvHeader === 'Igreja') {
+                            currentSignatureData.igreja = value;
+                        } else if (tsvHeader === 'Distrito') {
+                            currentSignatureData.distrito = value;
+                        } else if (tsvHeader === 'Whatsapp') {
+                            currentSignatureData.whatsapp = value;
+                        } else if (tsvHeader === 'Carimbo de data/hora') {
+                            currentSignatureData.timestamp = value;
+                        } else if (productCodeToEntryIdMap[tsvHeader]) {
+                            const entryId = productCodeToEntryIdMap[tsvHeader];
+                            currentSignatureData[entryId] = value;
                         }
                     });
 
@@ -761,14 +616,27 @@ Vue.createApp({
                             if (quantity > 0) {
                                 aggregatedSignatures[igreja].products[entryId] = (aggregatedSignatures[igreja].products[entryId] || 0) + quantity;
                                 aggregatedSignatures[igreja].total += quantity;
+                                totalSum += quantity;
                             }
                         }
                     }
                 }
+                this.totalSignatures = totalSum;
                 this.signaturesData = Object.values(aggregatedSignatures);
+            } catch (error) {
+                
+                this.totalSignatures = 0;
+            } finally {
+                this.isFetchingSignatures = false;
+                this.showLoadingOverlay = false;
+            }
+        },
+        openSignaturesTableModal: async function() {
+            this.showLoadingOverlay = true;
+            try {
+                await this.fetchTotalSignatures();
                 this.showSignaturesTableModal = true;
             } catch (error) {
-                console.error("Falha ao buscar ou processar os dados das assinaturas:", error);
                 this.showAlert("Não foi possível carregar os dados das assinaturas. Verifique o link da planilha ou a conexão com a internet.");
             } finally {
                 this.showLoadingOverlay = false;
