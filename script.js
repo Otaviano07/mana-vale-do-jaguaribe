@@ -440,6 +440,7 @@ Vue.createApp({
                 return;
             }
             this.showLoadingOverlay = true; // Mostra o loading
+            console.log('Loading overlay set to true.');
 
             try {
                 this.totalSignatures++;
@@ -447,6 +448,7 @@ Vue.createApp({
 
                 // Adiciona um tempo de loading de 5 segundos
                 await new Promise(resolve => setTimeout(resolve, 5000));
+                console.log('5 seconds delay finished.');
 
                 this.showAlert('Formulário enviado com sucesso!'); // Mensagem de confirmação
 
@@ -461,6 +463,7 @@ Vue.createApp({
                 // A mensagem de erro já é tratada em sendToGoogleForm
             } finally {
                 this.showLoadingOverlay = false; // Esconde o loading
+                console.log('Loading overlay set to false in finally block.');
             }
         },
         resetForm() {
