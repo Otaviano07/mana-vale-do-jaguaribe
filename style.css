@@ -40,6 +40,8 @@ body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     padding: 20px;
+    display: flex;
+    flex-direction: column;
 }
 
 .container {
@@ -49,6 +51,7 @@ body {
     border-radius: 20px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    flex-grow: 1;
 }
 
 .header {
@@ -1161,4 +1164,27 @@ body {
 
 .custom-alert-box button:hover {
     background: var(--secondary-color);
+}
+
+footer {
+    background: var(--secondary-color);
+    color: var(--white);
+    text-align: center;
+    padding: 15px;
+    margin-top: 20px;
+    border-radius: 10px;
+    font-size: 0.9em;
+    box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.1);
+}
+
+footer p {
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    footer {
+        margin-top: 10px;
+        padding: 10px;
+        font-size: 0.8em;
+    }
 }
