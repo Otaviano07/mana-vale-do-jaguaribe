@@ -443,7 +443,6 @@ Vue.createApp({
             console.log('Loading overlay set to true.');
 
             try {
-                this.totalSignatures++;
                 await this.sendToGoogleForm();
 
                 // Adiciona um tempo de loading de 5 segundos
@@ -451,9 +450,11 @@ Vue.createApp({
                 console.log('5 seconds delay finished.');
 
                 this.showAlert('Formulário enviado com sucesso!'); // Mensagem de confirmação
-
+                this.showLoadingOverlay = false;
                 // Pergunta ao usuário se deseja compartilhar a conquista
                 if (await this.showConfirm('Deseja tirar uma foto e compartilhar sua conquista?')) {
+                    
+                    this.totalSignatures++;
                     this.openPhotoShareModal(); 
                 } else {
                     this.resetForm(); 
@@ -462,7 +463,8 @@ Vue.createApp({
                 console.error('Erro no submitForm:', error);
                 // A mensagem de erro já é tratada em sendToGoogleForm
             } finally {
-                this.showLoadingOverlay = false; // Esconde o loading
+                // Esconde o loading
+                this.showLoadingOverlay = false;
                 console.log('Loading overlay set to false in finally block.');
             }
         },
