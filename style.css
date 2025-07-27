@@ -522,16 +522,22 @@ body {
     background: linear-gradient(135deg, #c8860d 0%, #1a365d 100%);
     color: white;
     border: none;
-    padding: 15px 20px; /* Ajuste o padding para caberem lado a lado */
-    border-radius: 25px;
+    width: 60px; /* Tamanho fixo para botões de ícone */
+    height: 60px; /* Tamanho fixo para botões de ícone */
+    border-radius: 50%; /* Torna o botão redondo */
     font-size: 1.2em;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
-    flex-grow: 1; /* Permite que os botões cresçam para preencher o espaço */
-    text-transform: uppercase;
-    letter-spacing: 1px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    display: flex; /* Para centralizar o ícone */
+    align-items: center; /* Para centralizar o ícone */
+    justify-content: center; /* Para centralizar o ícone */
+}
+
+.submit-btn .material-icons,
+.reset-btn .material-icons {
+    font-size: 30px; /* Tamanho do ícone */
 }
 
 .reset-btn {
@@ -704,14 +710,15 @@ body {
         box-shadow: 0 0 0 3px rgba(200, 134, 13, 0.1);
     }
 
-    .submit-btn {
-        padding: 10px 15px;
-        font-size: 1em;
+    .submit-btn,
+    .reset-btn {
+        width: 50px; /* Tamanho menor para telas pequenas */
+        height: 50px; /* Tamanho menor para telas pequenas */
     }
 
-    .reset-btn {
-        padding: 10px 15px;
-        font-size: 1em;
+    .submit-btn .material-icons,
+    .reset-btn .material-icons {
+        font-size: 24px; /* Tamanho do ícone menor para telas pequenas */
     }
 
     .form-actions {
