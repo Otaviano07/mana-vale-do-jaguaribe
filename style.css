@@ -4,9 +4,40 @@
     box-sizing: border-box;
 }
 
+:root {
+    --primary-color: #c8860d;
+    --secondary-color: #1a365d;
+    --accent-color: #f5da9a;
+    --light-gray: #f8f9fa;
+    --medium-gray: #e9ecef;
+    --dark-gray: #333;
+    --text-color-light: #666;
+    --error-color: #d9534f;
+    --white: white;
+    --black-transparent-10: rgba(0, 0, 0, 0.1);
+    --black-transparent-30: rgba(0,0,0,0.3);
+    --black-transparent-50: rgba(0,0,0,0.5);
+    --black-transparent-60: rgba(0, 0, 0, 0.6);
+    --black-transparent-70: rgba(0, 0, 0, 0.7);
+    --black-transparent-80: rgba(0, 0, 0, 0.8);
+    --black-transparent-90: rgba(0, 0, 0, 0.9);
+    --gold-transparent-10: rgba(200, 134, 13, 0.1);
+    --gold-transparent-30: rgba(200, 134, 13, 0.3);
+    --reset-btn-start: #acacac;
+    --reset-btn-end: #777777;
+    --alert-bg-color: #fff3cd;
+    --alert-border-color: #ffeaa7;
+    --alert-text-color: #856404;
+
+    --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    --gradient-header: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 50%, var(--primary-color) 100%);
+    --gradient-counter: linear-gradient(45deg, var(--secondary-color), #2d5aa0);
+    --gradient-reset-btn: linear-gradient(135deg, var(--reset-btn-start) 0%, var(--reset-btn-end) 100%);
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* This one is unique, keep as is or define a specific variable if it's used elsewhere */
     min-height: 100vh;
     padding: 20px;
 }
@@ -21,8 +52,8 @@ body {
 }
 
 .header {
-    background: linear-gradient(135deg, #c8860d 0%, #1a365d 50%, #c8860d 100%);
-    color: white;
+    background: var(--gradient-header);
+    color: var(--white);
     padding: 40px;
     text-align: center;
     position: relative;
@@ -32,10 +63,10 @@ body {
 .header h1 {
     font-size: 2.2em;
     margin-bottom: 10px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    text-shadow: 2px 2px 4px var(--black-transparent-50);
     position: relative;
     z-index: 1;
-    color: #c8860d;background: rgba(26,54,93,0.9);
+    color: var(--primary-color);background: rgba(26,54,93,0.9);
     padding: 15px;
     border-radius: 10px;
 }
@@ -43,22 +74,22 @@ body {
 .header h2 {
     font-size: 3em;
     margin: 20px 0;
-    color: white;
-    text-shadow: 3px 3px 6px rgba(0,0,0,0.7);
+    color: var(--white);
+    text-shadow: 3px 3px 6px var(--black-transparent-70);
 }
 
 .header h3 {
     font-size: 1.5em;
     margin: 10px 0;
-    color: #c8860d;
+    color: var(--primary-color);
 }
 
 .assinometro {
-    background: rgba(0,0,0,0.3);
+    background: var(--black-transparent-30);
     border-radius: 20px;
     padding: 30px;
     margin: 30px 0;
-    border: 3px solid #c8860d;
+    border: 3px solid var(--primary-color);
     position: relative;
 }
 
@@ -74,7 +105,7 @@ body {
 .refresh-btn {
     background: transparent;
     border: none;
-    color: white;
+    color: var(--white);
     cursor: pointer;
     padding: 5px;
 }
@@ -87,7 +118,7 @@ body {
 .signatures-table-btn {
     background: transparent;
     border: none;
-    color: white;
+    color: var(--white);
     cursor: pointer;
     padding: 5px;
 }
@@ -122,7 +153,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: var(--black-transparent-80);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -159,7 +190,7 @@ body {
 }
 
 .signatures-table-modal-content h3 {
-    color: #1a365d;
+    color: var(--secondary-color);
     margin-bottom: 20px;
     font-size: 1.8em;
     text-align: center;
@@ -208,44 +239,44 @@ body {
 
 .assinometro h3 {
     font-size: 2.5em;
-    color: #c8860d;
+    color: var(--primary-color);
     margin-bottom: 15px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    text-shadow: 2px 2px 4px var(--black-transparent-50);
 }
 
 .meta-info {
     font-size: 1.3em;
     margin-bottom: 20px;
-    color: white;
+    color: var(--white);
 }
 
 .counter-display {
-    background: linear-gradient(45deg, #1a365d, #2d5aa0);
-    border: 4px solid #c8860d;
+    background: var(--gradient-counter);
+    border: 4px solid var(--primary-color);
     border-radius: 20px;
     padding: 20px;
     margin: 20px 0;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    box-shadow: 0 10px 30px var(--black-transparent-50);
 }
 
 .counter-number {
     font-size: 4em;
     font-weight: bold;
-    color: #c8860d;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+    color: var(--primary-color);
+    text-shadow: 2px 2px 4px var(--black-transparent-70);
     letter-spacing: 8px;
 }
 
 .counter-label {
     font-size: 1.2em;
-    color: white;
+    color: var(--white);
     margin-top: 10px;
     letter-spacing: 2px;
 }
 
 .motivational-text {
     font-size: 1.2em;
-    color: #c8860d;
+    color: var(--primary-color);
     margin-top: 20px;
     font-style: italic;
 }
@@ -260,7 +291,7 @@ body {
 
 .section-title {
     font-size: 1.8em;
-    color: #333;
+    color: var(--dark-gray);
     margin-bottom: 25px;
     text-align: center;
     position: relative;
@@ -274,7 +305,7 @@ body {
     transform: translateX(-50%);
     width: 50px;
     height: 3px;
-    background: linear-gradient(135deg, #c8860d, #1a365d);
+    background: var(--gradient-primary);
     border-radius: 2px;
 }
 
@@ -286,8 +317,8 @@ body {
 }
 
 .product-card {
-    background: #f8f9fa;
-    border: 2px solid #c8860d;
+    background: var(--light-gray);
+    border: 2px solid var(--primary-color);
     border-radius: 15px;
     padding: 20px;
     transition: all 0.3s ease;
@@ -297,15 +328,15 @@ body {
 }
 
 .product-card.selected {
-    border-color: #c8860d;
-    background-color: #f5da9a;
+    border-color: var(--primary-color);
+    background-color: var(--accent-color);
 }
 
 .product-card:hover {
-    background-color: #f5da9a;
+    background-color: var(--accent-color);
     transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
-    border-color: #c8860d;
+    box-shadow: 0 15px 30px var(--black-transparent-10);
+    border-color: var(--primary-color);
 }
 
 .product-card::before {
@@ -315,7 +346,7 @@ body {
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(135deg, #c8860d, #1a365d);
+    background: var(--gradient-primary);
     transform: scaleX(0);
     transition: transform 0.3s ease;
 }
@@ -333,15 +364,15 @@ body {
 
 .product-name {
     font-weight: bold;
-    color: #333;
+    color: var(--dark-gray);
     font-size: 1.1em;
     flex: 1;
 }
 
 .product-code {
-    color: #666;
+    color: var(--text-color-light);
     font-size: 0.9em;
-    background: #e9ecef;
+    background: var(--medium-gray);
     padding: 4px 8px;
     border-radius: 8px;
 }
@@ -354,14 +385,14 @@ body {
 }
 
 .product-age {
-    color: #666;
+    color: var(--text-color-light);
     font-size: 0.9em;
 }
 
 .product-price {
     font-size: 1.3em;
     font-weight: bold;
-    color: #c8860d;
+    color: var(--primary-color);
 }
 
 .quantity-control {
@@ -376,8 +407,8 @@ body {
 }
 
 .quantity-btn {
-    background: #c8860d;
-    color: white;
+    background: var(--primary-color);
+    color: var(--white);
     border: none;
     width: 32px;
     height: 32px;
@@ -392,7 +423,7 @@ body {
 }
 
 .quantity-btn:hover {
-    background: #1a365d;
+    background: var(--secondary-color);
     transform: scale(1.05);
 }
 
@@ -410,7 +441,7 @@ body {
     background-color: transparent;
     font-size: 1.1em;
     font-weight: bold;
-    color: #1a365d;
+    color: var(--secondary-color);
     padding: 8px 0;
     outline: none;
 }
@@ -436,7 +467,7 @@ body {
 }
 
 .form-section {
-    background: #f8f9fa;
+    background: var(--light-gray);
     padding: 30px;
     border-radius: 15px;
     margin-bottom: 30px;
@@ -475,7 +506,7 @@ body {
 
 .form-label {
     font-weight: bold;
-    color: #333;
+    color: var(--dark-gray);
     margin-bottom: 8px;
     font-size: 0.9em;
     text-transform: uppercase;
@@ -484,7 +515,7 @@ body {
 
 .form-input {
     padding: 12px 15px;
-    border: 2px solid #e9ecef;
+    border: 2px solid var(--medium-gray);
     border-radius: 10px;
     font-size: 1.2em;
     transition: all 0.3s ease;
@@ -493,12 +524,12 @@ body {
 
 .form-input:focus {
     outline: none;
-    border-color: #c8860d;
-    box-shadow: 0 0 0 3px rgba(200, 134, 13, 0.1);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--gold-transparent-10);
 }
 
 .error-message {
-    color: #d9534f;
+    color: var(--error-color);
     font-size: 0.9em;
     margin-top: 5px;
     min-height: 1em;
@@ -519,8 +550,8 @@ body {
 
 .submit-btn,
 .reset-btn {
-    background: linear-gradient(135deg, #c8860d 0%, #1a365d 100%);
-    color: white;
+    background: var(--gradient-primary);
+    color: var(--white);
     border: none;
     padding: 15px 20px; /* Ajuste o padding para caberem lado a lado */
     border-radius: 25px;
@@ -531,22 +562,22 @@ body {
     flex-grow: 1; /* Permite que os botões cresçam para preencher o espaço */
     text-transform: uppercase;
     letter-spacing: 1px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    box-shadow: 0 5px 15px var(--black-transparent-20);
 }
 
 .reset-btn {
-    background: linear-gradient(135deg, #acacac 0%, #777777 100%); /* Cor diferente para o botão de reset */
+    background: var(--gradient-reset-btn); /* Cor diferente para o botão de reset */
 }
 
 .submit-btn:hover,
 .reset-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(200, 134, 13, 0.3);
+    box-shadow: 0 10px 20px var(--gold-transparent-30);
 }
 
 .submit-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(200, 134, 13, 0.3);
+    box-shadow: 0 10px 20px var(--gold-transparent-30);
 }
 
 @media (max-width: 768px) {
@@ -700,8 +731,8 @@ body {
 
     .form-input:focus {
         outline: none;
-        border-color: #c8860d;
-        box-shadow: 0 0 0 3px rgba(200, 134, 13, 0.1);
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px var(--gold-transparent-10);
     }
 
     .submit-btn {
@@ -722,13 +753,13 @@ body {
     }
 
     .note {
-        background: #fff3cd;
-        border: 2px solid #ffeaa7;
+        background: var(--alert-bg-color);
+        border: 2px solid var(--alert-border-color);
         border-radius: 10px;
         padding: 15px;
         margin-top: 20px;
         font-size: 0.9em;
-        color: #856404;
+        color: var(--alert-text-color);
         text-align: center;
     }
 }
@@ -739,7 +770,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: var(--black-transparent-80);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -789,7 +820,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.9);
+    background-color: var(--black-transparent-90);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -826,13 +857,13 @@ body {
 }
 
 .photo-share-modal-content h2 {
-    color: #1a365d;
+    color: var(--secondary-color);
     margin-bottom: 15px;
     font-size: 1.8em;
 }
 
 .photo-share-modal-content p {
-    color: #666;
+    color: var(--text-color-light);
     margin-bottom: 25px;
     font-size: 1.1em;
 }
@@ -841,7 +872,7 @@ body {
     width: 100%;
     max-width: 400px;
     height: auto;
-    border: 2px solid #c8860d;
+    border: 2px solid var(--primary-color);
     border-radius: 10px;
     margin-bottom: 20px;
 }
@@ -849,14 +880,14 @@ body {
 .preview-section .final-share-image {
     max-width: 100%;
     height: auto;
-    border: 2px solid #1a365d;
+    border: 2px solid var(--secondary-color);
     border-radius: 10px;
     margin-bottom: 20px;
 }
 
 .photo-share-modal-content button {
-    background: linear-gradient(135deg, #c8860d 0%, #1a365d 100%);
-    color: white;
+    background: var(--gradient-primary);
+    color: var(--white);
     border: none;
     padding: 12px 25px;
     border-radius: 25px;
@@ -869,7 +900,7 @@ body {
 
 .photo-share-modal-content button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(200, 134, 13, 0.3);
+    box-shadow: 0 5px 15px var(--gold-transparent-30);
 }
 
 .photo-share-modal-content button:disabled {
@@ -888,8 +919,8 @@ body {
     height: 50px; /* Adjust as needed */
     padding: 0 !important; /* Override general button padding */
     border-radius: 50%; /* Make it round */
-    background: linear-gradient(135deg, #c8860d 0%, #1a365d 100%) !important; /* Ensure background is applied */
-    color: white !important; /* Ensure text/icon color is white */
+    background: var(--gradient-primary) !important; /* Ensure background is applied */
+    color: var(--white) !important; /* Ensure text/icon color is white */
 }
 
 .icon-button .material-icons {
@@ -900,7 +931,7 @@ body {
 /* Ensure hover and disabled states are also specific */
 .icon-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(200, 134, 13, 0.3);
+    box-shadow: 0 5px 15px var(--gold-transparent-30);
 }
 
 .icon-button:disabled {
@@ -921,7 +952,7 @@ body {
     padding-bottom: 177.77%; /* Proporção 9:16 (altura/largura * 100) */
     height: 0;
     overflow: hidden;
-    border: 2px solid #c8860d;
+    border: 2px solid var(--primary-color);
     border-radius: 10px;
 }
 
@@ -988,19 +1019,19 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: var(--black-transparent-70);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: 3000; /* Higher than other modals */
-    color: white;
+    color: var(--white);
     font-size: 1.2em;
 }
 
 .loading-spinner {
     border: 8px solid #f3f3f3;
-    border-top: 8px solid #c8860d;
+    border-top: 8px solid var(--primary-color);
     border-radius: 50%;
     width: 60px;
     height: 60px;
@@ -1015,7 +1046,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: var(--black-transparent-60);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -1023,19 +1054,19 @@ body {
 }
 
 .custom-confirm-box {
-    background: white;
+    background: var(--white);
     padding: 30px;
     border-radius: 15px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    box-shadow: 0 5px 20px var(--black-transparent-30);
     text-align: center;
     max-width: 400px;
     width: 90%;
-    border-top: 5px solid #1a365d;
+    border-top: 5px solid var(--secondary-color);
 }
 
 .custom-confirm-box p {
     font-size: 1.2em;
-    color: #333;
+    color: var(--dark-gray);
     margin-bottom: 20px;
 }
 
@@ -1056,15 +1087,15 @@ body {
 }
 
 #confirm-button-true{
-    background: #c8860d;
+    background: var(--primary-color);
 }
 
 #confirm-button-false{
-    background: #acacac;
+    background: var(--reset-btn-start);
 }
 
 .custom-confirm-box button:hover {
-    background: #1a365d;
+    background: var(--secondary-color);
 }
 
 /* Custom Alert Styles */
@@ -1074,7 +1105,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: var(--black-transparent-60);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -1082,25 +1113,25 @@ body {
 }
 
 .custom-alert-box {
-    background: white;
+    background: var(--white);
     padding: 30px;
     border-radius: 15px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    box-shadow: 0 5px 20px var(--black-transparent-30);
     text-align: center;
     max-width: 400px;
     width: 90%;
-    border-top: 5px solid #c8860d;
+    border-top: 5px solid var(--primary-color);
 }
 
 .custom-alert-box p {
     font-size: 1.2em;
-    color: #333;
+    color: var(--dark-gray);
     margin-bottom: 20px;
 }
 
 .custom-alert-box button {
-    background: #c8860d;
-    color: white;
+    background: var(--primary-color);
+    color: var(--white);
     border: none;
     padding: 10px 30px;
     border-radius: 20px;
@@ -1110,6 +1141,6 @@ body {
 }
 
 .custom-alert-box button:hover {
-    background: #1a365d;
+    background: var(--secondary-color);
 }
 
