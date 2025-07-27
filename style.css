@@ -176,7 +176,7 @@ body {
 .signatures-table-modal-content table {
     width: 100%;
     border-collapse: collapse;
-    table-layout: fixed;
+    table-layout: auto;
 }
 
 .signatures-table-modal-content th,
@@ -715,9 +715,9 @@ body {
     }
 
     .form-actions {
-        width: 95%; /* Adjust width for smaller screens */
+        width: 85%; /* Adjust width for smaller screens */
         max-width: unset; /* Remove max-width constraint */
-        flex-direction: column; /* Stack buttons vertically */
+        /*flex-direction: column;  Stack buttons vertically */
         gap: 10px;
     }
 

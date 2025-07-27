@@ -368,8 +368,11 @@ Vue.createApp({
                     throw new Error(`HTTP error! code: ${response.status}`);
                 }
                 const dataText = await response.text();
+                console.log("Dados brutos da igreja (dataText):", dataText);
                 const lines = dataText.trim().split('\n');
+                console.log("Linhas processadas da igreja:", lines);
                 this.churches = lines.slice(1).map(line => line.trim()).filter(line => line !== '');
+                console.log("Igrejas carregadas (this.churches):", this.churches);
             } catch (error) {
                 console.error("Falha ao buscar ou processar os dados da igreja:", error);
                 this.showAlert("Não foi possível carregar os dados das igrejas. Verifique o link da planilha ou a conexão com a internet.");
@@ -436,15 +439,28 @@ Vue.createApp({
                 this.showAlert('Por favor, selecione pelo menos um produto.');
                 return;
             }
-            this.totalSignatures++;
-            await this.sendToGoogleForm();
-            
+            this.showLoadingOverlay = true; // Mostra o loading
 
-            // Pergunta ao usuário se deseja compartilhar a conquista
-            if (await this.showConfirm('Deseja tirar uma foto e compartilhar sua conquista?')) {
-                this.openPhotoShareModal(); 
-            } else {
-                this.resetForm(); 
+            try {
+                this.totalSignatures++;
+                await this.sendToGoogleForm();
+
+                // Adiciona um tempo de loading de 5 segundos
+                await new Promise(resolve => setTimeout(resolve, 5000));
+
+                this.showAlert('Formulário enviado com sucesso!'); // Mensagem de confirmação
+
+                // Pergunta ao usuário se deseja compartilhar a conquista
+                if (await this.showConfirm('Deseja tirar uma foto e compartilhar sua conquista?')) {
+                    this.openPhotoShareModal(); 
+                } else {
+                    this.resetForm(); 
+                }
+            } catch (error) {
+                console.error('Erro no submitForm:', error);
+                // A mensagem de erro já é tratada em sendToGoogleForm
+            } finally {
+                this.showLoadingOverlay = false; // Esconde o loading
             }
         },
         resetForm() {
