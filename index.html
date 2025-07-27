@@ -47,8 +47,11 @@
             <div class="form-container">
                 <div class="products-section">
                     <h2 class="section-title">Selecione suas Lições</h2>
+                    <div class="filter-container">
+                        <input type="text" v-model="searchQuery" placeholder="Filtrar por nome ou idade..." class="filter-input">
+                    </div>
                     <div class="products-grid">
-                        <div v-for="product in products" :key="product.code" class="product-card" :class="{ selected: product.quantity > 0 }">
+                        <div v-for="product in filteredProducts" :key="product.code" class="product-card" :class="{ selected: product.quantity > 0 }">
                             <div class="product-header">
                                 <div class="product-name">{{ product.name }}</div>
                                 <div class="product-code">(Cód. {{ product.code }})</div>
@@ -131,11 +134,11 @@
 
                 <div class="preview-section" v-if="capturedImage">   
                     <img :src="finalShareImage" alt="Imagem para Compartilhar" class="final-share-image">
-                    <button @click="shareImage" :disabled="!finalShareImage" class="icon-button">
-                        <i class="material-icons">share</i>
-                    </button>
                     <button @click="retakePhoto" class="icon-button">
                         <i class="material-icons">refresh</i>
+                    </button>
+                    <button @click="shareImage" :disabled="!finalShareImage" class="icon-button">
+                        <i class="material-icons">share</i>
                     </button>
                 </div>
 

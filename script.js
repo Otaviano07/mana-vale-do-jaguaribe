@@ -2,6 +2,7 @@ Vue.createApp({
     data() {
         return {
             products: [],
+            searchQuery: '',
             dataUrlProducts: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSGocezfQekt9igT7GkM-by02hnL0ELUqtM-m3AySn1vqJ7gUdg7dJlz2nZpereA_le8_amweck88nr/pub?gid=0&single=true&output=tsv',
             dataUrlChurch: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSGocezfQekt9igT7GkM-by02hnL0ELUqtM-m3AySn1vqJ7gUdg7dJlz2nZpereA_le8_amweck88nr/pub?gid=1639594837&single=true&output=tsv',
             dataUrlSignatures: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSGocezfQekt9igT7GkM-by02hnL0ELUqtM-m3AySn1vqJ7gUdg7dJlz2nZpereA_le8_amweck88nr/pub?gid=901102443&single=true&output=tsv',
@@ -34,6 +35,18 @@ Vue.createApp({
             customConfirmMessage: '',
             confirmResolve: null
         };
+    },
+    computed: {
+        filteredProducts() {
+            if (!this.searchQuery) {
+                return this.products;
+            }
+            const lowerCaseQuery = this.searchQuery.toLowerCase();
+            return this.products.filter(product => {
+                return product.name.toLowerCase().includes(lowerCaseQuery) || 
+                       product.age.toLowerCase().includes(lowerCaseQuery);
+            });
+        }
     },
     watch: {
         formData: {
@@ -110,27 +123,27 @@ Vue.createApp({
         },
         validateForm() {
             this.formErrors = { nome: '', whatsapp: '', igreja: '' };
-            let isValid = true;
+            const errors = [];
 
             if (!this.formData.nome) {
                 this.formErrors.nome = 'O nome é obrigatório.';
-                isValid = false;
+                errors.push('Nome');
             }
 
             if (!this.formData.whatsapp) {
                 this.formErrors.whatsapp = 'O WhatsApp é obrigatório.';
-                isValid = false;
+                errors.push('Whatsapp');
             } else if (this.formData.whatsapp.replace(/\D/g, '').length < 10) {
                 this.formErrors.whatsapp = 'O número de WhatsApp parece inválido.';
-                isValid = false;
+                errors.push('Whatsapp inválido');
             }
 
             if (!this.formData.igreja) {
                 this.formErrors.igreja = 'A igreja é obrigatória.';
-                isValid = false;
+                errors.push('Igreja');
             }
 
-            return isValid;
+            return errors;
         },
         async openPhotoShareModal() {
             this.showPhotoShareModal = true;
@@ -429,8 +442,10 @@ Vue.createApp({
             }
         },
         async submitForm() {
-            if (!this.validateForm()) {
-                this.showAlert('Por favor, corrija os erros no formulário antes de continuar.');
+            const validationErrors = this.validateForm();
+            if (validationErrors.length > 0) {
+                const errorList = validationErrors.join(', ');
+                this.showAlert(`Por favor, preencha os seguintes campos obrigatórios: ${errorList}.`);
                 return;
             }
 

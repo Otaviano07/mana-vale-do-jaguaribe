@@ -289,6 +289,25 @@ body {
     margin-bottom: 40px;
 }
 
+.filter-container {
+    margin-bottom: 20px;
+}
+
+.filter-input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid var(--medium-gray);
+    border-radius: 10px;
+    font-size: 1.2em;
+    transition: all 0.3s ease;
+}
+
+.filter-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--gold-transparent-10);
+}
+
 .section-title {
     font-size: 1.8em;
     color: var(--dark-gray);
