@@ -111,6 +111,8 @@
 
         <div v-if="showPhotoShareModal" class="photo-share-modal-overlay">
             <div class="photo-share-modal-content">
+
+                <span class="photo-share-modal-close" @click="closePhotoShareModal">&times;</span>
                 <h3>Compartilhe sua Conquista!</h3>
 
                 <div class="camera-section" v-if="!capturedImage && showPhotoShareModal">
@@ -121,9 +123,6 @@
                     <div class="camera-controls">
                         <button @click="capturePhoto">
                             <i class="material-icons">add_a_photo</i>
-                        </button>
-                        <button @click="closePhotoShareModal">
-                            <i class="material-icons">close</i>
                         </button>
                     </div>
                 </div>
@@ -137,9 +136,6 @@
                     </button>
                     <button @click="retakePhoto" class="icon-button">
                         <i class="material-icons">refresh</i>
-                    </button>
-                    <button @click="closePhotoShareModal">
-                        <i class="material-icons">close</i>
                     </button>
                 </div>
 

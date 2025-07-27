@@ -705,19 +705,19 @@ body {
     }
 
     .submit-btn {
-        padding: 12px 20px;
-        font-size: 1.1em;
+        padding: 10px 15px;
+        font-size: 1em;
     }
 
     .reset-btn {
-        padding: 12px 20px;
-        font-size: 1.1em;
+        padding: 10px 15px;
+        font-size: 1em;
     }
 
     .form-actions {
         width: 85%; /* Adjust width for smaller screens */
         max-width: unset; /* Remove max-width constraint */
-        /*flex-direction: column;  Stack buttons vertically */
+        flex-direction: column;  /* Stack buttons vertically */
         gap: 10px;
     }
 
@@ -805,6 +805,24 @@ body {
     max-width: 500px;
     width: 90%;
     position: relative;
+}
+
+.photo-share-modal-close {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    color: #aaa;
+    font-size: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.photo-share-modal-close:hover,
+.photo-share-modal-close:focus {
+    color: #333;
+    text-decoration: none;
+    cursor: pointer;
 }
 
 .photo-share-modal-content h2 {

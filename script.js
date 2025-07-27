@@ -446,14 +446,13 @@ Vue.createApp({
                 await this.sendToGoogleForm();
 
                 // Adiciona um tempo de loading de 5 segundos
-                await new Promise(resolve => setTimeout(resolve, 5000));
+                await new Promise(resolve => setTimeout(resolve, 2000));
                 console.log('5 seconds delay finished.');
-
+                
                 this.showAlert('Formulário enviado com sucesso!'); // Mensagem de confirmação
                 this.showLoadingOverlay = false;
                 // Pergunta ao usuário se deseja compartilhar a conquista
                 if (await this.showConfirm('Deseja tirar uma foto e compartilhar sua conquista?')) {
-                    
                     this.totalSignatures++;
                     this.openPhotoShareModal(); 
                 } else {
